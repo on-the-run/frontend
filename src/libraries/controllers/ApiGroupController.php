@@ -65,27 +65,6 @@ class ApiGroupController extends ApiBaseController
   }
 
   /**
-    * Update an existing group
-    * Returns the newly created group or false as the response data
-    *
-    * @return string Standard JSON envelope
-    */
-  public function update($id)
-  {
-    getAuthentication()->requireAuthentication();
-    getAuthentication()->requireCrumb();
-    $res = $this->group->update($id, $_POST);
-
-    if($res)
-    {
-      $group = $this->api->invoke("/{$this->apiVersion}/group/{$id}/view.json", EpiRoute::httpGet);
-      return $this->success("Updated group {$id}.", $group['result']);
-    }
-
-    return $this->error('Could not update this group.', false);
-  }
-
-  /**
     * Get the owner's groups
     *
     * @return string Standard JSON envelope
@@ -144,6 +123,26 @@ class ApiGroupController extends ApiBaseController
     return $this->success('Successfully undeleted group', true);
   }
 
+  /**
+    * Update an existing group
+    * Returns the newly created group or false as the response data
+    *
+    * @return string Standard JSON envelope
+    */
+  public function update($id)
+  {
+    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireCrumb();
+    $res = $this->group->update($id, $_POST);
+
+    if($res)
+    {
+      $group = $this->api->invoke("/{$this->apiVersion}/group/{$id}/view.json", EpiRoute::httpGet);
+      return $this->success("Updated group {$id}.", $group['result']);
+    }
+
+    return $this->error('Could not update this group.', false);
+  }
 
   /**
     * Get the owner's group as specified by the groupId

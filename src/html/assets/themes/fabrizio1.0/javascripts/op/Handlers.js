@@ -132,6 +132,10 @@
           urlParts = url.match(/\/plugin\/(.*)\/view.json$/);
       OP.Util.makeRequest('/plugin/'+urlParts[1]+'/view.json', params, TBX.callbacks.pluginView, 'json', 'get');
     };
+    this.click.reload = function(ev) {
+      ev.preventDefault();
+      window.location.reload();
+    };
     this.click.selectAll = function(ev) {
       ev.preventDefault();
       var $els = $('.photo-grid .imageContainer .pin.edit'), batch = OP.Batch, count;
@@ -305,7 +309,8 @@
     };
     this.submit.groupUpdateHash = function(ev) {
       ev.preventDefault();
-      var $form = $(ev.target), url = $form.attr('action')+'.json', values = {C:null,R:null,U:null,D:null}, params, key = $('input[name="key"]', $form).attr('value'), $button = $('button', $form);
+      var $form = $(ev.target), url = $form.attr('action')+'.json', values = {C:null,R:null,U:null,D:null}, params, 
+          key = $('input[name="key"]', $form).attr('value'), $button = $('button', $form), callback = TBX.callbacks.groupUpdateSuccess.bind($button);
 
       $('input[type="checkbox"]', $form).each(function(i, el) {
         var $el = $(el), name = $el.attr('name'), checked = $el.is(':checked');
@@ -317,10 +322,37 @@
         params[key] = JSON.stringify(values);
       } else if(key === 'album') {
         // we need to construct a full album represenation and just update a single album permission
-        var albumId = $('input[name="albumId"]', $form).attr('value'), albums = __initData.album;
-        params[key] = albums;
+        var albumId = $('input[name="albumId"]', $form).attr('value'), groupAlbums = __initData.album;
+        params[key] = groupAlbums;
         params[key][albumId] = values;
         params[key] = JSON.stringify(params[key]);
+      } else if(key === 'album-add') {
+        var albumId = $('select[name="albums"]', $form).attr('value'), groupAlbums = __initData.album || {} /* convert null to object */, albumAddObj;
+        if(albumId.length === 0) {
+          TBX.notification.show('Please select an album to add to this group.', null, 'error');
+          OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-warning-sign'});
+          return;
+        }
+        params['album'] = groupAlbums;
+        params['album'][albumId] = values;
+        params['album'] = JSON.stringify(params['album']);
+        callback = function() { 
+          $('.checkboxes .inner input[type="checkbox"]', $form).attr('checked',false);
+          TBX.notification.show('Your album was added to this group. <a href="">Refresh</a> this page to see it.', null, 'confirm'); 
+          OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-ok'});
+        };
+      } else if(key === 'album-remove') {
+        var albumId = $('input[name="albumId"]', $form).attr('value'), groupAlbums;
+        // shallow copy (else it's by reference) http://stackoverflow.com/a/122704
+        groupAlbums = jQuery.extend({}, __initData.album);
+        delete groupAlbums[albumId];
+        params['album'] = groupAlbums;
+        params['album'] = JSON.stringify(params['album']);
+        callback = function() { 
+          __initData.album = groupAlbums;
+          $('div[data-album="'+albumId+'"]').fadeOut();
+          TBX.notification.show('Your album was removed from this group.', null, 'confirm'); 
+        };
       }
 
       $.ajax(
@@ -329,7 +361,7 @@
           dataType:'json',
           data:params,
           type:'POST',
-          success: TBX.callbacks.groupUpdateSuccess.bind($button),
+          success: callback,
           error: TBX.notification.display.generic.error.bind({replaceSpinner: {button: $button, icon:'icon-warning-sign'}}),
           context: $form
         }
@@ -416,6 +448,14 @@
       } else {
         TBX.notification.show('The upload widget could not be loaded. Try refreshing this page.', 'flash', 'error');
       }
+    };
+    
+    // change
+    this.change = {};
+    this.change.showGroupAlbumOptions = function(ev) {
+      var $el = $(ev.target), $options = $el.siblings('.checkboxes');
+      //$options.fadeIn('medium');
+      $('.inner', $options).animate({width:'100%'});
     };
 
     // custom

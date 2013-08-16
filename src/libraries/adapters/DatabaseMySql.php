@@ -2158,10 +2158,9 @@ class DatabaseMySql implements DatabaseInterface
     */
   private function normalizeGroup($raw)
   {
-    unset($raw['timestamp']);
-    $raw['album'] = json_decode($raw['album'], 1);
+    unset($raw['timestamp'], $raw['active'], $raw['group']);
+    $raw['album'] = empty($raw['album']) ? null : json_decode($raw['album'], 1);
     $raw['user'] = json_decode($raw['user'], 1);
-    $raw['group'] = json_decode($raw['group'], 1);
     return $raw;
   }
 

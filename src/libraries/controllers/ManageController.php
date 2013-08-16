@@ -60,20 +60,38 @@ class ManageController extends BaseController
 
   public function groupView($id)
   {
+    $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0')));
+    $allAlbums = $albumsResp['result'];
     $groupResp = $this->api->invoke(sprintf('/group/%s/view.json', $id));
+
     // TODO !group no no group then error page
+
     $group = $groupResp['result'];
-    $albums = array();
-    if(!empty($group['album']))
+
+    // we create an array of albums that belong to this group (a subset of allAlbums)
+    $groupAlbums = array();
+    if(empty($group['album']))
     {
+      $group['album'] = null;
+    }
+    else
+    {
+      // if we have albums then skip having to fetch each album in the group
+      //  else we leave the keys as is, no harm no foul
+      foreach($allAlbums as $key => $album)
+      {
+        $allAlbums[$album['id']] = $album;
+        unset($allAlbums[$key]);
+      }
+
       foreach($group['album'] as $albumId => $creds)
       {
         $albumResp = $this->api->invoke(sprintf('/album/%s/view.json', $albumId));
-        $albums[$albumId] = $albumResp['result'];
+        $groupAlbums[$albumId] = $allAlbums[$albumId];
       }
     }
 
-    $params = array('crumb' => $this->session->get('crumb'), 'page' => 'group-view', 'group' => $group, 'albums' => $albums);
+    $params = array('crumb' => $this->session->get('crumb'), 'page' => 'group-view', 'group' => $group, 'groupAlbums' => $groupAlbums, 'allAlbums' => $allAlbums);
     $bodyTemplate = sprintf('%s/manage-groups.php', $this->config->paths->templates);
     $body = $this->template->get($bodyTemplate, $params);
     $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));

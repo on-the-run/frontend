@@ -7,7 +7,7 @@
       var result = response.result;
       if(response.code === 201 || response.code === 409) {
         // if we're on the upload form then we insert into the selection list
-        var $sel = $('form.upload select[name="albums"]');
+        var $sel = $('form select[name="albums"]');
         if($sel.length === 1) {
           $sel.append($('<option>', {value: result.id, text: result.name, selected: 'selected'}));
           if(response.code === 201) {
