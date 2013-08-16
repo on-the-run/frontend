@@ -192,12 +192,16 @@
         // escape cancels flyout
         OP.Util.on('keyup:escape', TBX.handlers.click.batchHide);
         OP.Util.on('keyup:slash', TBX.callbacks.showKeyboardShortcuts);
+        OP.Util.on('callback:remove-spinners', TBX.callbacks.removeSpinners);
+        OP.Util.on('callback:replace-spinner', TBX.callbacks.replaceSpinner);
 
         if(location.pathname === '/') {
           TBX.init.pages.front.init();
         } else if(location.pathname.search(/^\/albums(.*)\/list/) === 0) {
           TBX.init.pages.albums.init();
           TBX.util.currentPage('albums');
+        } else if(location.pathname.search(/^\/manage\/groups\/list(.*)/) === 0) {
+          TBX.init.pages.manageGroups.init();
         } else if(location.pathname.search(/^\/photos(.*)\/list/) === 0) {
           if(location.pathname.search(/album-/) !== -1)
             TBX.util.currentPage('album');
@@ -231,10 +235,10 @@
           end: false,
           running: false,
           addAlbums: function(albums) {
-            var album, model, view, $el;
+            var album, model, view, $el, $ul = $('ul.albums');
             for(i in albums) {
               if(albums.hasOwnProperty(i)) {
-                $el = $('<li class="album" />').appendTo($('ul.albums'))
+                $el = $('<li class="album" />').appendTo($ul)
                 album = albums[i];
                 op.data.store.Albums.add( album );
                 model = op.data.store.Albums.get(album.id);
@@ -267,6 +271,27 @@
         },
         front: {
           init: function() {}
+        },
+        manageGroups: {
+          init: function() {
+            var groups = __initData, group, model, view, $el, $table, $noGroups;
+            if(groups.length == 0) {
+              $noGroups = $('div.no-groups');
+              $noGroups.show();
+            } else {
+              $table = $('table.groups').show();
+              for(i in groups) {
+                if(groups.hasOwnProperty(i)) {
+                  group = groups[i];
+                  $el = $('<tr class="group-'+group.id+'"/>').appendTo($table);
+                  op.data.store.Groups.add( group );
+                  model = op.data.store.Groups.get(group.id);
+                  view = new op.data.view.GroupListItem({model: model, el: $el});
+                  view.render();
+                }
+              }
+            }
+          }
         },
         photo: {
           initData: typeof(initData) === "undefined" ? undefined : initData,
@@ -408,6 +433,11 @@
         generic: {
           error: function() {
             TBX.notification.show('Sorry, an unknown error occurred.', 'flash', 'error');
+            if(typeof(this['removeSpinners']) !== 'undefined') {
+              OP.Util.fire('callback:remove-spinners');
+            } else if(typeof(this['replaceSpinner']) !== 'undefined') {
+              OP.Util.fire('callback:replace-spinner', this['replaceSpinner']);
+            }
           }
         }
       }

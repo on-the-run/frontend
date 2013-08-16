@@ -81,10 +81,8 @@ class ApiGroupController extends ApiBaseController
       $group = $this->api->invoke("/{$this->apiVersion}/group/{$id}/view.json", EpiRoute::httpGet);
       return $this->success("Updated group {$id}.", $group['result']);
     }
-    else
-    {
-      return $this->error('Could not update this group.', false);
-    }
+
+    return $this->error('Could not update this group.', false);
   }
 
   /**
@@ -106,6 +104,46 @@ class ApiGroupController extends ApiBaseController
 
     return $this->success('A list of your groups', (array)$groups);
   }
+
+  /**
+    * Manage members in a group
+    *
+    * @return string Standard JSON envelope
+    */
+  public function manageMembers($id, $action)
+  {
+    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireCrumb();
+
+    if(empty($_POST['emails']))
+      return $this->error('No email addresses provided', false);
+
+    $emails = (array)explode(',', $_POST['emails']);
+    $res = $this->group->manageMembers($id, $emails, $action);
+
+    if($res === false)
+      return $this->error('Could not update group member list', false);
+
+    return $this->success('Group members updated', $emails);
+  }
+
+  /**
+    * Undelete a group
+    *
+    * @return string Standard JSON envelope
+    */
+  public function undelete($id)
+  {
+    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireCrumb();
+    $res = $this->group->undelete($id);
+
+    if($res === false)
+      return $this->error('Could not undelete group', false);
+
+    return $this->success('Successfully undeleted group', true);
+  }
+
 
   /**
     * Get the owner's group as specified by the groupId

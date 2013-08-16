@@ -74,13 +74,41 @@
         TBX.notification.show('There was a problem retrieving your app.', null, 'error');
       }
     };
+    this.groupCreateSuccess = function(response) {
+      var group = response.result;
+      location.href = '/manage/group/'+group.id+'/view';
+    };
+    this.groupMemberAddSuccess = function(response) {
+      var $button = $(this), $input = $button.siblings('input[name="emails"]'), emails = response.result, message, $userList = $('.userList ul');
+      message = TBX.format.sprintf('You added %s %s to your group successfully.', emails.length, TBX.format.plural('user', emails.length));
+      TBX.notification.show(message, null, 'confirm');
+      OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-ok'});
+      for(i in emails) {
+        $('<li data-email="li-'+emails[i]+'">'+emails[i]+' <a href="#/group/'+__initData.id+'/member/remove" class="groupMemberRemove" data-email="'+emails[i]+'"><i class="icon-trash"></i> delete</a></li>').prependTo($userList);
+      }
+      $input.attr('value','').focus();
+    };
+    this.groupMemberRemove = function(response) {
+      var emails = response.result, $userList = $('.userList ul');
+      if(response.code !== 200) {
+        TBX.notification.show('There was a problem removing this member from your group.', null, 'error');
+        return;
+      }
+      if(emails.length > 0) {
+        for(i in emails) {
+          $('li[data-email="li-'+emails[i]+'"]', $userList).remove();
+        }
+      }
+      TBX.notification.show('Your group\'s member list was successfully updated.', null, 'success');
+    };
+    this.groupUpdateSuccess = function(response) {
+      var $button = $(this);
+      TBX.notification.show('Your group was successfully updated.', null, 'confirm');
+      OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-ok'});
+    };
     this.loginSuccess = function() {
       var redirect = $('input[name="r"]', this).val();
       window.location.href = redirect;
-    };
-    this.personaSuccess = function(assertion) {
-      var params = {assertion: assertion};
-      OP.Util.makeRequest('/user/browserid/login.json', params, TBX.callbacks.loginProcessed);
     };
     this.loginProcessed = function(response) {
       if(response.code != 200) {
@@ -90,6 +118,10 @@
       
       var url = $('input[name="r"]', $('form.login')).val();
       location.href = url;
+    };
+    this.personaSuccess = function(assertion) {
+      var params = {assertion: assertion};
+      OP.Util.makeRequest('/user/browserid/login.json', params, TBX.callbacks.loginProcessed);
     };
     this.pluginStatusToggle = function(response) {
       var a = $(this),
@@ -140,6 +172,18 @@
         (new op.data.view.ProfilePhoto({model:op.data.store.Profiles.get(ownerId), el: el})).render();
       });
       (new op.data.view.ProfilePhoto({model:op.data.store.Profiles.get(viewerId), el: $('.profile-photo-header-meta')})).render();
+    };
+    this.removeSpinners = function() {
+      var $icons = $('button i.icon-spinner');
+      $icons.each(function(i, el) { $(el).remove(); });
+    };
+    this.replaceSpinner = function(args) {
+      var $icon = $('i.icon-spinner', args.button), cls = 'icon-ok';
+      if(typeof(args['icon']) !== 'undefined')
+        cls = args.icon;
+
+      $icon.removeClass('icon-spinner icon-spin');
+      $icon.addClass(cls);
     };
     this.selectAll = function(i, el) {
       var id = $(el).attr('data-id'), photo = op.data.store.Photos.get(id).toJSON();

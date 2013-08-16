@@ -49,9 +49,34 @@ class ManageController extends BaseController
     $this->route->redirect('/manage/settings');
   }
 
-  public function groups()
+  public function groupsList()
   {
-    $this->route->redirect('/manage/settings');
+    $groupsResp = $this->api->invoke('/groups/list.json');
+    $params = array('crumb' => $this->session->get('crumb'), 'page' => 'group-list', 'groups' => $groupsResp['result']);
+    $bodyTemplate = sprintf('%s/manage-groups.php', $this->config->paths->templates);
+    $body = $this->template->get($bodyTemplate, $params);
+    $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));
+  }
+
+  public function groupView($id)
+  {
+    $groupResp = $this->api->invoke(sprintf('/group/%s/view.json', $id));
+    // TODO !group no no group then error page
+    $group = $groupResp['result'];
+    $albums = array();
+    if(!empty($group['album']))
+    {
+      foreach($group['album'] as $albumId => $creds)
+      {
+        $albumResp = $this->api->invoke(sprintf('/album/%s/view.json', $albumId));
+        $albums[$albumId] = $albumResp['result'];
+      }
+    }
+
+    $params = array('crumb' => $this->session->get('crumb'), 'page' => 'group-view', 'group' => $group, 'albums' => $albums);
+    $bodyTemplate = sprintf('%s/manage-groups.php', $this->config->paths->templates);
+    $body = $this->template->get($bodyTemplate, $params);
+    $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));
   }
 
   public function passwordReset($token)
@@ -96,7 +121,7 @@ class ManageController extends BaseController
     $params['crumb'] = $this->session->get('crumb');
     $bodyTemplate = sprintf('%s/manage-settings.php', $this->config->paths->templates);
     $body = $this->template->get($bodyTemplate, $params);
-    $this->theme->display('template.php', array('body' => $body, 'page' => 'manage-settings'));
+    $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));
   }
 
   public function settingsPost()

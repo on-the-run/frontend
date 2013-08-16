@@ -87,22 +87,26 @@
                 addJs($this->theme->asset('javascript', 'op/data/route/Routes.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/model/Album.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/model/Batch.js', false))->
+                addJs($this->theme->asset('javascript', 'op/data/model/Group.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/model/Notification.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/model/Profile.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/model/Photo.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/model/ProgressBar.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/model/Tag.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/collection/Album.js', false))->
+                addJs($this->theme->asset('javascript', 'op/data/collection/Group.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/collection/Profile.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/collection/Photo.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/collection/Tag.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/store/Albums.js', false))->
+                addJs($this->theme->asset('javascript', 'op/data/store/Groups.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/store/Profiles.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/store/Photos.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/store/Tags.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/Editable.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/BatchIndicator.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/AlbumCover.js', false))->
+                addJs($this->theme->asset('javascript', 'op/data/view/GroupListItem.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/Notification.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/PhotoDetail.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/PhotoGallery.js', false))->

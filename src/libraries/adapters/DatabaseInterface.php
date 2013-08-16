@@ -18,6 +18,7 @@ interface DatabaseInterface
   public function deleteAlbum($id);
   public function deleteCredential($id);
   public function deleteGroup($id);
+  public function deleteGroupMembers($id, $emails = null);
   public function deletePhoto($photo);
   public function deletePhotoVersions($photo);
   public function deleteRelationship($target);
@@ -71,6 +72,7 @@ interface DatabaseInterface
   public function postWebhook($id, $params);
   // put methods create but do not update
   public function putGroup($id, $params);
+  public function putGroupMembers($id, $emails);
   public function putAction($id, $params);
   public function putActivity($id, $elementId, $params);
   public function putAlbum($id, $params);
@@ -81,6 +83,8 @@ interface DatabaseInterface
   public function putShareToken($id, $params);
   public function putTag($id, $params);
   public function putWebhook($id, $params);
+  // undelete methods
+  public function undeleteGroup($id);
   // general methods
   public function initialize($isEditMode);
 }

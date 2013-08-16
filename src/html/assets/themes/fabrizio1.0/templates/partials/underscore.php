@@ -453,6 +453,23 @@
     </div>
   </div>
 </script>
+<script type="tmpl/underscore" id="group-list-item-meta">
+  <td class="span6">
+    <a href="" class="name edit"><i class="icon-pencil"></i> <span class="hide"><%- name %></span></a> <%- name %>
+    <p><a href="" class="description edit"><i class="icon-pencil"></i> <span class="hide"><%- description %></span></a> <%- description %></p>
+  </td>
+  <td class="span2 actions">
+    <div class="pull-right">
+      <a href="/manage/group/<%= id %>/view"><i class="icon-eye-open"></i> View</a>
+      &nbsp; &nbsp; &nbsp;
+      <% if (!deleted) { %>
+        <a href="/group/<%= id %>/delete" data-id="<%= id %>" class="delete"><i class="icon-trash"></i> Delete</a>
+      <% } else { %>
+        <a href="/group/<%= id %>/undelete" class="undelete" data-id="<%= id %>"><i class="icon-undo"></i> Undo</a>
+      <% } %>
+    </div>
+  </td>
+</script>
 <script type="tmpl/underscore" id="progress-meta">
   <div class="progress <%= striped %>">
     <div class="bar bar-success" style="width:<%= success %>%;"></div>

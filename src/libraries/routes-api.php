@@ -156,7 +156,9 @@ $apiObj->post('/?v?[1-2]?/oauth/([a-zA-Z0-9]+)/delete.json', array('ApiOAuthCont
 $apiObj->post('/?v?[1-2]?/group/create.json', array('ApiGroupController', 'create'), EpiApi::external);
 $apiObj->post('/?v?[1-2]?/group/([a-zA-Z0-9]+)/delete.json', array('ApiGroupController', 'delete'), EpiApi::external);
 $apiObj->get('/?v?[1-2]?/group/form.json', array('ApiGroupController', 'form'), EpiApi::external);
+$apiObj->post('/?v?[1-2]?/group/([a-zA-Z0-9]+)/undelete.json', array('ApiGroupController', 'undelete'), EpiApi::external);
 $apiObj->post('/?v?[1-2]?/group/([a-zA-Z0-9]+)/update.json', array('ApiGroupController', 'update'), EpiApi::external);
+$apiObj->post('/?v?[1-2]?/group/([a-zA-Z0-9]+)/member/(add|remove).json', array('ApiGroupController', 'manageMembers'), EpiApi::external);
 $apiObj->get('/?v?[1-2]?/group/([a-zA-Z0-9]+)/view.json', array('ApiGroupController', 'view'), EpiApi::external);
 $apiObj->get('/?v?[1-2]?/groups/list.json', array('ApiGroupController', 'list_'), EpiApi::external);
 

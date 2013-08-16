@@ -1,0 +1,63 @@
+body.manage {
+  ul.sub-navigation {
+    margin-top:25px;
+    li.active {
+      > a {
+        background-color: @color_light_gray;
+        color: @color_banner_secondary_font;
+      }
+    }
+  }
+
+  p.blurb {
+    i {
+      color:@color_light_gray;
+      font-size:larger;
+    }
+    vertical-align: middle;
+    font-size: smaller;
+    font-style:italic;
+  }
+
+  form {
+    small {
+      i {
+        color:@color_light_gray;
+        font-size:larger;
+      }
+      display:block;
+      font-style:italic;
+      font-size:smaller;
+    }
+  }
+
+  table.groups {
+    .description {
+      font-size: smaller;
+      margin-left:15px;
+    }
+    td.actions {
+      vertical-align:middle;
+    }
+  }
+
+  div.albums {
+    > div {
+      padding-bottom: 60px;
+    }
+
+    @import "stack";
+    @import "cover";
+    .cover {
+      margin:auto;
+    }
+  }
+
+  div.userList {
+    ul {
+      li {
+        padding:0 0 5px;
+      }
+    }
+  }
+}

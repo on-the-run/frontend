@@ -22,8 +22,6 @@
             <li><a href="http://bit.ly/trovebox-for-iphone" title="Download our Trovebox for iOS"><i class="icon-apple"></i> iPhone / iPad</a></li>
             <li><a href="http://bit.ly/trovebox-for-android" title="Download Trovebox for Android"><i class="icon-android"></i> Android</a></li>
           <?php } elseif($this->utility->isActiveTab('manage')) {?>
-            <li class="separator-left"><a href="#settings"><i class="icon-cogs"></i> General Settings</a></li>
-            <li><a href="#apps"><i class="icon-briefcase"></i> Applications</a></li>
-            <li><a href="#plugins"><i class="icon-circle-blank"></i> Plugins</a></li>
-            <li><a href="#tokens"><i class="icon-share-alt"></i> Sharing Tokens</a></li>
+            <li class="separator-left"><a href="/manage/settings"><i class="icon-cogs"></i> General Settings</a></li>
+            <li><a href="/manage/groups/list"><i class="icon-group"></i> Groups</a></li>
           <?php } ?>

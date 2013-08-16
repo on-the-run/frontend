@@ -7,6 +7,12 @@
 
     // CLICK
     this.click = {};
+    this.click.addSpinner = function(ev) {
+      var $el = $(ev.target);
+      // remove existing icons if any
+      $el.find('i').remove();
+      $('<i class="icon-spinner icon-spin"></i>').prependTo($el);
+    };
     this.click.batchAlbumMode = function(ev) {
       var $el = $(ev.target), $form = $el.closest('form'), $albums = $('select.albums', $form);
       if($el.val() === 'add')
@@ -42,6 +48,11 @@
 
       OP.Util.makeRequest(url, params, TBX.callbacks.credentialView, 'json', 'get');
       return false;
+    };
+    this.click.groupMemberRemove = function(ev) {
+      ev.preventDefault();
+      var $el = $(ev.target), email = $el.attr('data-email'), url = $el.attr('href').substr(1)+'.json', params = {crumb: TBX.crumb(), emails: email};
+      OP.Util.makeRequest(url, params, TBX.callbacks.groupMemberRemove, 'json', 'post');
     };
     this.click.loadMorePhotos = function(ev) {
       ev.preventDefault();
@@ -133,6 +144,13 @@
       var $el = $(ev.target), photoId = $el.attr('data-id'), albumId = TBX.util.getPathParam('album');
       OP.Util.makeRequest(TBX.format.sprintf('/album/%s/cover/%s/update.json', albumId, photoId), {crumb: TBX.crumb()}, TBX.callbacks.setAlbumCover, 'json', 'post');
     };
+    this.click.settingsSubNav = function(ev) {
+      ev.preventDefault();
+      var $el = $(ev.target), $settingsDiv = $('body.manage div.sections'), $visible = $($('.section:visible', $settingsDiv)[0]), $active = $('.'+$el.attr('href').substr(1)), $lis = $('ul.sub-navigation li'), $li = $el.parent();
+      $lis.each(function(i, el) { $(el).removeClass('active') });
+      $li.addClass('active');
+      $visible.fadeOut('fast', function() { $active.fadeIn('fast'); });
+    };
     this.click.shareAlbum = function(ev) {
       ev.preventDefault();
       var $el = $(ev.target), id = $el.attr('data-id');
@@ -204,6 +222,11 @@
       ev.preventDefault();
       TBX.tutorial.run();
     };
+    this.click.undeleteGroup = function(ev) {
+      ev.preventDefault();
+      var $el = $(ev.target), url = $el.attr('href')+'.json', id = $el.attr('data-id'), bindParams = {id: id};
+      OP.Util.makeRequest(url, {crumb:TBX.crumb()}, TBX.callbacks.undeleteGroup.bind(bindParams), 'json', 'post');
+    };
     this.click.uploadBeta = function(ev) {
       ev.preventDefault();
       TBX.upload.start();
@@ -249,6 +272,68 @@
         }
       }
       OP.Util.makeRequest(url, params, TBX.callbacks.batch.bind(params), 'json', 'post');
+    };
+    this.submit.groupCreate = function(ev) {
+      ev.preventDefault();
+      var $form = $(ev.target), $button = $('button', $form), params = $form.serialize();
+      $.ajax(
+        {
+          url: '/group/create.json',
+          dataType: 'json',
+          data: params,
+          type: 'POST',
+          success: TBX.callbacks.groupCreateSuccess.bind($button),
+          error: TBX.notification.display.generic.error.bind({replaceSpinner: {button: $button, icon:'icon-warning-sign'}}),
+          context: $form
+        }
+      );
+    };
+    this.submit.groupMemberAdd = function(ev) {
+      ev.preventDefault();
+      var $form = $(ev.target), $button = $('button', $form), params = $form.serialize(), url = $form.attr('action')+'.json';
+      $.ajax(
+        {
+          url: url,
+          dataType: 'json',
+          data: params,
+          type: 'POST',
+          success: TBX.callbacks.groupMemberAddSuccess.bind($button),
+          error: TBX.notification.display.generic.error.bind({replaceSpinner: {button: $button, icon:'icon-warning-sign'}}),
+          context: $form
+        }
+      );
+    };
+    this.submit.groupUpdateHash = function(ev) {
+      ev.preventDefault();
+      var $form = $(ev.target), url = $form.attr('action')+'.json', values = {C:null,R:null,U:null,D:null}, params, key = $('input[name="key"]', $form).attr('value'), $button = $('button', $form);
+
+      $('input[type="checkbox"]', $form).each(function(i, el) {
+        var $el = $(el), name = $el.attr('name'), checked = $el.is(':checked');
+        values[name] = checked;
+      });
+
+      params = {crumb: TBX.crumb(),httpCodes: '*'};
+      if(key === 'user') {
+        params[key] = JSON.stringify(values);
+      } else if(key === 'album') {
+        // we need to construct a full album represenation and just update a single album permission
+        var albumId = $('input[name="albumId"]', $form).attr('value'), albums = __initData.album;
+        params[key] = albums;
+        params[key][albumId] = values;
+        params[key] = JSON.stringify(params[key]);
+      }
+
+      $.ajax(
+        {
+          url: url,
+          dataType:'json',
+          data:params,
+          type:'POST',
+          success: TBX.callbacks.groupUpdateSuccess.bind($button),
+          error: TBX.notification.display.generic.error.bind({replaceSpinner: {button: $button, icon:'icon-warning-sign'}}),
+          context: $form
+        }
+      );
     };
     this.submit.login = function(ev) {
       ev.preventDefault();

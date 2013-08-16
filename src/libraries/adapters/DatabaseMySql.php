@@ -124,8 +124,31 @@ class DatabaseMySql implements DatabaseInterface
     */
   public function deleteGroup($id)
   {
-    $res = $this->db->execute("DELETE FROM `{$this->mySqlTablePrefix}group` WHERE `id`=:id AND owner=:owner", array(':id' => $id, ':owner' => $this->owner));
+    // TODO clean up all references in related tables
+    $res = $this->db->execute("UPDATE `{$this->mySqlTablePrefix}group` SET `active`=0 WHERE `id`=:id AND `owner`=:owner", array(':id' => $id, ':owner' => $this->owner));
     return ($res !== false);
+  }
+
+  /**
+    * Delete members from a group
+    *
+    * @param string $id Element id (id of the photo or video)
+    * @return boolean
+    */
+  public function deleteGroupMembers($id, $emails = null)
+  {
+    if($emails === null)
+    {
+      $res = $this->db->execute("DELETE FROM `{$this->mySqlTablePrefix}groupMember` WHERE `owner`=:owner AND `group`=:group", array(':owner' => $this->owner, ':group' => $id));
+    }
+    else
+    {
+      foreach($emails as $key => $email)
+        $emails[$key] = $this->_($email);
+      $emails = sprintf("'%s'", implode("','", $emails));
+      $res = $this->db->execute($sql = "DELETE FROM `{$this->mySqlTablePrefix}groupMember` WHERE `owner`=:owner AND `group`=:group AND `email` IN ({$emails})", array(':owner' => $this->owner, ':group' => $id));
+    }
+    return $res !== false;
   }
 
   /**
@@ -477,6 +500,27 @@ class DatabaseMySql implements DatabaseInterface
     */
   public function getGroup($id = null)
   {
+    // TODO !group change `group` PK to list `owner` column first
+    $group = $this->db->one("SELECT * FROM `{$this->mySqlTablePrefix}group` WHERE `id`=:id AND `owner`=:owner AND `active`=1", array(':id' => $id ,':owner' => $this->owner));
+ 
+    // TODO !group check permission
+    
+    if(empty($group))
+      return false;
+
+    $members = $this->db->all("SELECT * FROM `{$this->mySqlTablePrefix}groupMember` WHERE `owner`=:owner AND `group`=:id", array(':owner' => $this->owner,':id' => $id));
+
+    $group['members'] = array();
+    if(!empty($members))
+    {
+      foreach($members as $member)
+        $group['members'][] = $member['email'];
+    }
+
+    return $this->normalizeGroup($group);
+
+
+
     $res = $this->db->all("SELECT grp.*, memb.email FROM `{$this->mySqlTablePrefix}group` AS grp LEFT JOIN `{$this->mySqlTablePrefix}groupMember` AS memb ON `grp`.`owner`=`memb`.`owner` WHERE `grp`.`id`=:id AND `grp`.`owner`=:owner", array(':id' => $id ,':owner' => $this->owner));
     if($res === false || empty($res))
       return false;
@@ -499,6 +543,18 @@ class DatabaseMySql implements DatabaseInterface
     */
   public function getGroups($email = null)
   {
+    $groups = $this->db->all("SELECT * FROM `{$this->mySqlTablePrefix}group` WHERE `owner`=:owner AND `active`=1", array(':owner' => $this->owner));
+    // TODO !group check permission
+    
+    if(empty($groups))
+      return false;
+
+    foreach($groups as $k => $v)
+      $groups[$k] = $this->normalizeGroup($v);
+
+    return $groups;
+
+
 
     if(empty($email))
       $res = $this->db->all("SELECT `grp`.*, `memb`.`email` 
@@ -1124,11 +1180,6 @@ class DatabaseMySql implements DatabaseInterface
     $bindings[':owner'] = $this->owner;
 
     $result = $this->db->execute("UPDATE `{$this->mySqlTablePrefix}group` SET {$stmt} WHERE `id`=:id AND owner=:owner", $bindings);
-    if($members !== false)
-    {
-      $this->deleteGroupMembers($id);
-      $this->addGroupMembers($id, $members);
-    }
 
     return $result !== false;
   }
@@ -1372,21 +1423,36 @@ class DatabaseMySql implements DatabaseInterface
     */
   public function putGroup($id, $params)
   {
+    // TODO !group description not being stored
     $params['owner'] = $this->owner;
+    $params['actor'] = $this->getActor();
     if(!isset($params['id']))
       $params['id'] = $id;
-    $members = false;
-    if(isset($params['members']))
-    {
-      $members = !empty($params['members']) ? (array)explode(',', $params['members']) : null;
-      unset($params['members']);
-    }
     $params = $this->prepareGroup($id, $params);
     $stmt = $this->sqlInsertExplode($params);
-    $result = $this->db->execute("INSERT INTO `{$this->mySqlTablePrefix}group` ({$stmt['cols']}) VALUES ({$stmt['vals']})");
-    if($members !== false)
-      $this->addGroupMembers($id, $members);
+    $result = $this->db->execute($sql = "INSERT INTO `{$this->mySqlTablePrefix}group` ({$stmt['cols']}) VALUES ({$stmt['vals']})");
     return $result !== false;
+  }
+
+  /**
+    * Add members to a group
+    *
+    * @param string $id Group id
+    * @param array $members Members to be added
+    * @return boolean
+    */
+  public function putGroupMembers($id, $emails)
+  {
+    if(empty($id) || empty($emails))
+      return false;
+
+    $sql = "REPLACE INTO `{$this->mySqlTablePrefix}groupMember`(`owner`, `actor`, `group`, `email`) VALUES ";
+    foreach($emails as $email)
+      $sql .= sprintf("('%s', '%s', '%s', '%s'),", $this->_($this->owner), $this->_($this->getActor()), $this->_($id), $this->_($email));
+
+    $sql = substr($sql, 0, -1);
+    $res = $this->db->execute($sql);
+    return $res > 0;
   }
 
   /**
@@ -1502,6 +1568,20 @@ class DatabaseMySql implements DatabaseInterface
   }
 
   /**
+    * Undelete a group from the database
+    *
+    * @param string $id ID of the group to delete
+    * @return boolean
+    */
+  public function undeleteGroup($id)
+  {
+    // TODO clean up all references in related tables
+    $res = $this->db->execute($sql = "UPDATE `{$this->mySqlTablePrefix}group` SET `active`=1 WHERE `id`=:id AND `owner`=:owner", array(':id' => $id, ':owner' => $this->owner));
+    return ($res !== false);
+  }
+
+
+  /**
     * Get the current database version
     *
     * @return string Version number
@@ -1557,27 +1637,6 @@ class DatabaseMySql implements DatabaseInterface
     $res = $this->db->execute($sql);
 
     return $res !== false;
-  }
-
-  /**
-    * Add members to a group
-    *
-    * @param string $id Group id
-    * @param array $members Members to be added
-    * @return boolean
-    */
-  private function addGroupMembers($id, $members)
-  {
-    if(empty($id) || empty($members))
-      return false;
-
-    $sql = "REPLACE INTO `{$this->mySqlTablePrefix}groupMember`(`owner`, `group`, `email`) VALUES ";
-    foreach($members as $member)
-      $sql .= sprintf("('%s', '%s', '%s'),", $this->_($this->owner), $this->_($id), $this->_($member));
-
-    $sql = substr($sql, 0, -1);
-    $res = $this->db->execute($sql);
-    return $res > 0;
   }
 
   /**
@@ -1884,18 +1943,6 @@ class DatabaseMySql implements DatabaseInterface
   }
 
   /**
-    * Delete members from a group
-    *
-    * @param string $id Element id (id of the photo or video)
-    * @return boolean
-    */
-  private function deleteGroupMembers($id)
-  {
-    $res = $this->db->execute("DELETE FROM `{$this->mySqlTablePrefix}groupMember` WHERE `owner`=:owner AND `group`=:group", array(':owner' => $this->owner, ':group' => $id));
-    return $res !== false;
-  }
-
-  /**
     * Delete tags for an element from the mapping table
     *
     * @param string $id Element id (id of the photo or video)
@@ -2111,8 +2158,10 @@ class DatabaseMySql implements DatabaseInterface
     */
   private function normalizeGroup($raw)
   {
-    if(!isset($raw['members']) || empty($raw['members']))
-      $raw['members'] = array();
+    unset($raw['timestamp']);
+    $raw['album'] = json_decode($raw['album'], 1);
+    $raw['user'] = json_decode($raw['user'], 1);
+    $raw['group'] = json_decode($raw['group'], 1);
     return $raw;
   }
 
@@ -2328,7 +2377,7 @@ class DatabaseMySql implements DatabaseInterface
         $stmt['cols'] .= ",";
       if(!empty($stmt['vals']))
         $stmt['vals'] .= ",";
-      $stmt['cols'] .= $key;
+      $stmt['cols'] .= "`{$key}`";
       if(!empty($bindings) && array_key_exists($value, $bindings))
       {
         if(is_null($value))

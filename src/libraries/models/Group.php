@@ -49,13 +49,44 @@ class Group extends BaseModel
 
   public function getGroup($id)
   {
+    // TODO !group check permission
     $group = $this->db->getGroup($id);
     return $group;
   }
 
   public function getGroups($email = null)
   {
+    // TODO !group check permission
     return $this->db->getGroups($email);
+  }
+
+  public function manageMembers($id, $emails, $action)
+  {
+    foreach($emails as $k => $v) 
+    {
+      if(stristr($v, '@') === false)
+        unset($emails[$k]);
+    }
+
+    if(count($emails) === 0)
+      return false;
+
+    $res = false;
+    switch($action)
+    {
+      case 'add':
+        $res = $this->db->putGroupMembers($id, $emails);
+        break;
+      case 'remove':
+        $res = $this->db->deleteGroupMembers($id, $emails);
+        break;
+    }
+    return $res;
+  }
+
+  public function undelete($id)
+  {
+    return $this->db->undeleteGroup($id);
   }
 
   public function update($id, $params)
@@ -76,16 +107,25 @@ class Group extends BaseModel
   private function getDefaultAttributes()
   {
     return array(
-      'appId' => $this->config->application->appId,
       'name' => '',
-      'members' => array()
+      'description' => '',
+      'album' => null,
+      'user' => null,
+      'group' => null
     );
   }
 
   private function validate($params, $create = true)
   {
-    if( ($create && (!isset($params['appId']) || empty($params['appId']))) || (!isset($params['name']) || empty($params['name'])) )
+    // when creating an account we require the name
+    // when updateing we check to make sure if a name is passed in that it's not empty
+    if(empty($params))
       return false;
+    elseif($create && (!isset($params['name']) || empty($params['name'])))
+      return false;
+    elseif(isset($params['name']) && empty($params['name']))
+      return false;
+
     return true;
   }
 }

@@ -12,7 +12,7 @@
       var $el = $(el);
 
       startColor = $el.css('backgroundColor');
-      $el.animate({backgroundColor: highlightColor}, 'slow', 'swing', reset.bind($el));
+      $el.animate({backgroundColor: highlightColor}, 2000, 'swing', reset.bind($el));
     }
   }
   
