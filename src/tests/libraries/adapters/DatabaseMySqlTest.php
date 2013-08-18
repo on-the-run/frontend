@@ -11,6 +11,11 @@ class DatabaseMySqlOverride extends DatabaseMySql
   {
     return null;
   }
+
+  protected function getActor()
+  {
+    return 'test@example.com';
+  }
 }
 
 class DatabaseMySqlTest extends PHPUnit_Framework_TestCase
@@ -260,7 +265,7 @@ class DatabaseMySqlTest extends PHPUnit_Framework_TestCase
     $db = $this->getMock('MySqlMock', array('all'));
     $db->expects($this->any())
       ->method('all')
-      ->will($this->returnValue(array('one', 'two')));
+      ->will($this->returnValue(array(array('timestamp'=>1,'album'=>1,'group'=>1,'user'=>1), array('timestamp'=>1,'album'=>1,'group'=>1,'user'=>1))));
     $this->db->inject('db', $db);
 
     $res = $this->db->getGroups('foo');
@@ -277,6 +282,16 @@ class DatabaseMySqlTest extends PHPUnit_Framework_TestCase
 
     $res = $this->db->getGroups('foo');
     $this->assertFalse($res, 'The MySql adapter did not return FALSE for getGroups');
+  }
+
+  public function testGetGroupsByUserSuccess()
+  {
+    $this->markTestIncomplete('This test has not been implemented yet. #1247');
+  }
+
+  public function testGetGruopsByUserFailure()
+  {
+    $this->markTestIncomplete('This test has not been implemented yet. #1247');
   }
 
   public function testGetPhotoSuccess()
@@ -867,7 +882,7 @@ class DatabaseMySqlTest extends PHPUnit_Framework_TestCase
       ->will($this->returnValue(true));
     $this->db->inject('db', $db);
 
-    $res = $this->db->putGroup('foo', array());
+    $res = $this->db->putGroup('foo', array('foo' => 'bar'));
     $this->assertTrue($res, 'The MySql adapter did not return TRUE for putGroup');
   }
 

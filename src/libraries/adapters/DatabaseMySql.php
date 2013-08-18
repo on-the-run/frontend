@@ -518,21 +518,6 @@ class DatabaseMySql implements DatabaseInterface
     }
 
     return $this->normalizeGroup($group);
-
-
-
-    $res = $this->db->all("SELECT grp.*, memb.email FROM `{$this->mySqlTablePrefix}group` AS grp LEFT JOIN `{$this->mySqlTablePrefix}groupMember` AS memb ON `grp`.`owner`=`memb`.`owner` WHERE `grp`.`id`=:id AND `grp`.`owner`=:owner", array(':id' => $id ,':owner' => $this->owner));
-    if($res === false || empty($res))
-      return false;
-
-    $group = array('id' => $res[0]['id'], 'owner' => $res[0]['owner'], 'name' => $res[0]['name'], 'permission' => $res[0]['permission'], 'members' => array());
-    foreach($res as $r)
-    {
-      if(!empty($r['email']))
-        $group['members'][] = $r['email'];
-    }
-
-    return $this->normalizeGroup($group);
   }
 
   /**
@@ -553,43 +538,44 @@ class DatabaseMySql implements DatabaseInterface
       $groups[$k] = $this->normalizeGroup($v);
 
     return $groups;
+  }
 
+  /**
+    * Retrieve groups from the database optionally filter by member (email)
+    *
+    * @param string $email email address to filter by
+    * @return mixed Array on success, FALSE on failure
+    */
+  public function getGroupsByUser(/*$email = null*/)
+  {
+    // default to actor
+    if($email === null)
+      $email = $this->getActor();
 
-
-    if(empty($email))
-      $res = $this->db->all("SELECT `grp`.*, `memb`.`email` 
-        FROM `{$this->mySqlTablePrefix}group` AS `grp` 
-        LEFT JOIN `{$this->mySqlTablePrefix}groupMember` AS `memb` ON `grp`.`owner`=`memb`.`owner` AND `grp`.`id`=`memb`.`group` 
-        WHERE `grp`.`id` IS NOT NULL AND `grp`.`owner`=:owner 
-        ORDER BY `grp`.`name`", array(':owner' => $this->owner));
-    else
-      $res = $this->db->all("SELECT `grp`.*, `memb`.`email` 
-        FROM `{$this->mySqlTablePrefix}group` AS `grp` 
-        LEFT JOIN `{$this->mySqlTablePrefix}groupMember` AS `memb` ON `grp`.`owner`=`memb`.`owner` AND `grp`.`id`=`memb`.`group` 
-        WHERE `memb`.`email`=:email AND `grp`.`id` IS NOT NULL AND `grp`.`owner`=:owner 
-        ORDER BY `grp`.`name`", array(':email' => $email, ':owner' => $this->owner));
-
-    if($res !== false)
+    // if the user is the owner then return all active groups
+    // else return groups this user is a member of
+    if($email == $this->owner)
     {
-      $groups = array();
-      if(!empty($res))
-      {
-        $tempGroups = array();
-        foreach($res as $group)
-        {
-          if(!isset($tempGroups[$group['id']]))
-            $tempGroups[$group['id']] = array('id' => $group['id'], 'name' => $group['name'], 'owner' => $group['owner'], 'permission' => $group['permission'], 'members' => array());
-
-          if(!empty($group['email']))
-            $tempGroups[$group['id']]['members'][] = $group['email'];
-        }
-        foreach($tempGroups as $g)
-          $groups[] = $this->normalizeGroup($g);
-      }
-      return $groups;
+      $groups = $this->getGroups();
     }
+    else
+    {
+      $groups = $this->db->all($sql = "SELECT * 
+        FROM `{$this->mySqlTablePrefix}group` 
+        WHERE `owner`=:owner AND 
+          `id` IN (SELECT `group` FROM `{$this->mySqlTablePrefix}groupMember` WHERE `email`=:email) AND 
+          `active`=1", 
+          array(':owner' => $this->owner, ':email' => $email));
 
-    return false;
+      foreach($groups as $k => $v)
+        $groups[$k] = $this->normalizeGroup($v);
+    }
+    
+    if(empty($groups))
+      return false;
+
+
+    return $groups;
   }
 
   /**
@@ -1428,6 +1414,7 @@ class DatabaseMySql implements DatabaseInterface
     $params['actor'] = $this->getActor();
     if(!isset($params['id']))
       $params['id'] = $id;
+
     $params = $this->prepareGroup($id, $params);
     $stmt = $this->sqlInsertExplode($params);
     $result = $this->db->execute($sql = "INSERT INTO `{$this->mySqlTablePrefix}group` ({$stmt['cols']}) VALUES ({$stmt['vals']})");
@@ -1600,6 +1587,16 @@ class DatabaseMySql implements DatabaseInterface
     }
 
     return '0.0.0';
+  }
+
+  protected function getActor()
+  {
+    if($this->actor !== null)
+      return $this->actor;
+
+    $user = new User;
+    $this->actor = $user->getEmailAddress();
+    return $this->actor;
   }
 
   /**
@@ -1954,16 +1951,6 @@ class DatabaseMySql implements DatabaseInterface
   {
     $res = $this->db->execute("DELETE FROM `{$this->mySqlTablePrefix}elementTag` WHERE `owner`=:owner AND `type`=:type AND `element`=:element", array(':owner' => $this->owner, ':type' => $type, ':element' => $id));
     return $res !== false;
-  }
-
-  private function getActor()
-  {
-    if($this->actor !== null)
-      return $this->actor;
-
-    $user = new User;
-    $this->actor = $user->getEmailAddress();
-    return $this->actor;
   }
 
   private function isAdmin()
