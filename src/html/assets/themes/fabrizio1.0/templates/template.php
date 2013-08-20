@@ -56,6 +56,10 @@
       addJs('/assets/javascripts/openphoto-helper.js', false)->
       getUrl(AssetPipeline::js, $this->config->site->mediaVersion, $this->config->site->mode === 'prod'); ?>">
     </script>
+    <script type="text/javascript" src="<?php $this->utility->safe($this->config->site->cdnPrefix);?><?php echo getAssetPipeline(true)->setMode(AssetPipeline::combined)->
+      addJs($this->theme->asset('javascript', 'video/jwplayer.js', false))->
+      getUrl(AssetPipeline::js, $this->config->site->mediaVersion, $this->config->site->mode === 'prod'); ?>">
+    </script>
 
     <script type="text/javascript">
       OP.Util.init(jQuery, {

@@ -352,6 +352,14 @@
     this.custom.uploaderBetaReady = function() {
       TBX.upload.init();
     };
+    this.custom.videoLoad = function(arg) {
+      var id = arg.id, elementId = 'video-element-'+id, params = {};
+      params.file = arg.file;
+      params.image = arg.image;
+      params.width = parseInt(arg.width);
+      params.height = parseInt(arg.height);
+      jwplayer(elementId).setup(params);
+    };
   }
   
   TBX.handlers = new Handlers;

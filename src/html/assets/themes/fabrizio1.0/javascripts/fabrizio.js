@@ -336,6 +336,9 @@
           running: false,
           init: function() {
             var options, _pages = TBX.init.pages, _this = _pages.photos, batchModel = _pages.photos.batchModel, $batchEl = $('.batch-meta');
+
+            OP.Util.on('video:load', TBX.handlers.custom.videoLoad);
+
             $(window).scroll(function() { util.scrollCb(_this); });
             _this.load();
             (new op.data.view.BatchIndicator({model:batchModel, el: $batchEl})).render();
