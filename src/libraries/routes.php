@@ -37,6 +37,7 @@ $routeObj->get('/manage/settings', array('ManageController', 'settings'));
 $routeObj->post('/manage/settings', array('ManageController', 'settingsPost'));
 $routeObj->get('/manage/groups/list', array('ManageController', 'groupsList'));
 $routeObj->get('/manage/group/([a-zA-Z0-9]+)/view', array('ManageController', 'groupView'));
+$routeObj->get('/manage/administrators', array('ManageController', 'administrators'));
 $routeObj->get('/manage/password/reset/([a-z0-9]{32})', array('ManageController', 'passwordReset'));
 
 /*

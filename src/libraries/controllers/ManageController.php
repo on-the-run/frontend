@@ -22,6 +22,17 @@ class ManageController extends BaseController
       getAuthentication()->requireAuthentication();
   }
 
+  public function administrators()
+  {
+    $params = array('crumb' => $this->session->get('crumb'), 'page' => 'administrators');
+    $params['admins'] = array();
+    if(isset($this->config->user->admins))
+      $params['admins'] = (array)explode(',', $this->config->user->admins);
+    $bodyTemplate = sprintf('%s/manage-groups.php', $this->config->paths->templates);
+    $body = $this->template->get($bodyTemplate, $params);
+    $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));
+  }
+
   public function albums()
   {
     $this->route->redirect('/albums/list');
@@ -130,13 +141,10 @@ class ManageController extends BaseController
     $params['allowDuplicate'] = $this->config->site->allowDuplicate == '1';
     $params['hideFromSearchEngines'] = $this->config->site->hideFromSearchEngines == '1';
     $params['decreaseLocationPrecision'] = $this->config->site->decreaseLocationPrecision == '1';
+    $params['crumb'] = $this->session->get('crumb');
     $params['credentials'] = $credentials;
     $params['plugins'] = $plugins;
     $params['tokens'] = $tokens;
-    $params['admins'] = array();
-    if(isset($this->config->user->admins))
-      $params['admins'] = (array)explode(',', $this->config->user->admins);
-    $params['crumb'] = $this->session->get('crumb');
     $bodyTemplate = sprintf('%s/manage-settings.php', $this->config->paths->templates);
     $body = $this->template->get($bodyTemplate, $params);
     $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));
@@ -151,6 +159,10 @@ class ManageController extends BaseController
     else
       $notification->add('There was a problem updating your settings.', Notification::typeFlash, Notification::modeError);
 
-    $this->route->redirect('/manage/settings');
+    $r = '/manage/settings';
+    if(isset($_POST['r']))
+      $r = $_POST['r'];
+    $this->route->redirect($r);
+
   }
 }

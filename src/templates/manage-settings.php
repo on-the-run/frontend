@@ -2,7 +2,6 @@
   <div class="span2">
     <ul class="nav nav-tabs nav-stacked affix sub-navigation">
       <li class="active settingsSubNav"><a href="#settings" class="settingsSubNav"><i class="icon-sitemap"></i> Your Site</a></li>
-      <li><a href="#collaborators" class="settingsSubNav"><i class="icon-group"></i> Collaborators</a></li>
       <li><a href="#applications" class="settingsSubNav"><i class="icon-briefcase"></i> Applications</a></li>
       <li><a href="#plugins" class="settingsSubNav"><i class="icon-circle-blank"></i> Plugins</a></li>
       <li><a href="#tokens" class="settingsSubNav"><i class="icon-share-alt"></i> Sharing Tokens</a></li>
@@ -45,23 +44,7 @@
               Decrease the accuracy when displaying my photos on a map for others
             </label>
           </div>
-          <div class="btn-toolbar"><button class="btn btn-brand">Save</button></div>
-          <input type="hidden" name="crumb" value="<?php $this->utility->safe($crumb); ?>">
-        </div>
-      </form>
-    </div>
-
-    <div class="row collaborators section hide">
-      <form method="post" action="/manage/settings">
-        <div class="span10">
-          <h2>Collaborators</h2>
-          <p class="blurb">
-            <i class="icon-info-sign"></i> Enter email addresses for others you'd like to collaborate with you. These users will have full access to your account. They can log in using Mozilla Persona.
-          </p>
-          <?php for($i=0; $i<4; $i++) { ?>
-            <div><input type="text" name="admins[<?php echo $i; ?>]" <?php if(isset($admins[$i])) { ?> value="<?php $this->utility->safe($admins[$i]); ?>" <?php } ?> placeholder="user<?php echo ($i+1); ?>@example.com"></div>
-          <?php } ?>
-          <div class="btn-toolbar"><button class="btn btn-brand">Save</button></div>
+          <div class="btn-toolbar"><button class="btn btn-brand addSpinner">Save</button></div>
           <input type="hidden" name="crumb" value="<?php $this->utility->safe($crumb); ?>">
         </div>
       </form>

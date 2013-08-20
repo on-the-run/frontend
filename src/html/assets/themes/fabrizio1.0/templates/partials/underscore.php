@@ -453,22 +453,16 @@
     </div>
   </div>
 </script>
-<script type="tmpl/underscore" id="group-list-item-meta">
-  <td class="span6">
-    <a href="" class="name edit"><i class="icon-pencil"></i> <span class="hide"><%- name %></span></a> <%- name %>
-    <p><a href="" class="description edit"><i class="icon-pencil"></i> <span class="hide"><%- description %></span></a> <%- description %></p>
-  </td>
-  <td class="span2 actions">
-    <div class="pull-right">
-      <a href="/manage/group/<%= id %>/view"><i class="icon-eye-open"></i> View</a>
-      &nbsp; &nbsp; &nbsp;
-      <% if (!deleted) { %>
-        <a href="/group/<%= id %>/delete" data-id="<%= id %>" class="delete"><i class="icon-trash"></i> Delete</a>
-      <% } else { %>
-        <a href="/group/<%= id %>/undelete" class="undelete" data-id="<%= id %>"><i class="icon-undo"></i> Undo</a>
-      <% } %>
-    </div>
-  </td>
+<script type="tmpl/underscore" id="group-meta">
+  <h2><a href="#" class="name edit"><i class="icon-pencil"></i> <span class="hide"><%- name %></span></a><%- name %></h2>
+  <p><a href="#" class="description edit"><i class="icon-pencil"></i> <span class="hide"><%- description %></span></a><%- description %></p>
+</script>
+<script type="tmpl/underscore" id="group-delete-meta">
+  <% if(deleted) { %>
+    <a href="#" class="undelete btn btn-danger addSpinner"><i class="icon-undo"></i> Undo delete</a>
+  <% } else { %>
+    <a href="#" class="delete btn btn-danger addSpinner"><i class="icon-trash"></i> Delete this group</a>
+  <% } %>
 </script>
 <script type="tmpl/underscore" id="progress-meta">
   <div class="progress <%= striped %>">

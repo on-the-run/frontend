@@ -106,7 +106,8 @@
                 addJs($this->theme->asset('javascript', 'op/data/view/Editable.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/BatchIndicator.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/AlbumCover.js', false))->
-                addJs($this->theme->asset('javascript', 'op/data/view/GroupListItem.js', false))->
+                addJs($this->theme->asset('javascript', 'op/data/view/Group.js', false))->
+                addJs($this->theme->asset('javascript', 'op/data/view/GroupDelete.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/Notification.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/PhotoDetail.js', false))->
                 addJs($this->theme->asset('javascript', 'op/data/view/PhotoGallery.js', false))->

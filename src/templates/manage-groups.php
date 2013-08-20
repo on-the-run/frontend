@@ -1,12 +1,30 @@
 <div class="row">
   <div class="span2">
     <ul class="nav nav-tabs nav-stacked affix sub-navigation">
-      <li class="<?php if($page === 'group-view') { ?>active <?php } ?>"><a href="/manage/users/list"><i class="icon-user"></i> Manage Users</a></li>
       <li class="<?php if($page === 'group-list') { ?>active <?php } ?>"><a href="/manage/groups/list"><i class="icon-group"></i> Manage Groups</a></li>
+      <li class="<?php if($page === 'administrators') { ?>active <?php } ?>"><a href="/manage/administrators"><i class="icon-user-md"></i> Administrators</a></li>
     </ul>
   </div>
   <div class="span10 sections">
-    <?php if($page === 'group-list') { ?>
+    <?php if($page === 'administrators') { ?>
+      <div class="row collaborators">
+        <div class="span10">
+          <form method="post" action="/manage/settings">
+            <h2>Collaborators</h2>
+            <p class="blurb">
+              <i class="icon-info-sign"></i> Enter email addresses for others you'd like to collaborate with you. These users will have full access to your account. They can log in using Mozilla Persona.
+            </p>
+            <?php for($i=0; $i<4; $i++) { ?>
+              <div><input type="text" name="admins[<?php echo $i; ?>]" <?php if(isset($admins[$i])) { ?> value="<?php $this->utility->safe($admins[$i]); ?>" <?php } ?> placeholder="user<?php echo ($i+1); ?>@example.com"></div>
+            <?php } ?>
+            <div class="btn-toolbar"><button class="btn btn-brand addSpinner">Save</button></div>
+            <input type="hidden" name="crumb" value="<?php $this->utility->safe($crumb); ?>">
+            <input type="hidden" name="skipDefaults" value="1">
+            <input type="hidden" name="r" value="/manage/administrators">
+          </form>
+        </div>
+      </div>
+    <?php } elseif($page === 'group-list') { ?>
       <div class="row grouplist">
         <div class="span10">
           <h2>Groups <small><a href="#" class="toggle" data-target="form.groupCreate">Create a group</a></small></h2>
@@ -22,16 +40,30 @@
             <div class="btn-toolbar"><button class="btn btn-brand addSpinner">Create</button></div>
             <input type="hidden" name="crumb" value="<?php $this->utility->safe($crumb); ?>">
           </form>
-          <table class="table groups hide"></table>
-          <div class="no-groups hide">You haven't created any groups yet.</div>
+          <?php if(!empty($groups)) { ?>
+            <?php foreach($groups as $group) { ?>
+              <div class="row group-list">
+                <div class="span10">
+                  <a href="/manage/group/<?php echo $group['id']; ?>/view"><i class="icon-group"></i> <?php $this->utility->safe($group['name']); ?></a>
+                  <p>Contains <?php printf('%d %s', count($group['album']), $this->utility->plural(count($group['album']), 'album', false)); ?>.</p>
+                </div>
+              </div>
+            <?php } ?>
+          <?php } else { ?>
+            <div class="row">
+              <div class="span10 empty">
+                <h3>Start now, <a href="#" class="toggle" data-target="form.groupCreate">create a group</a></h3>
+              </div>
+            </div>
+          <?php } ?>
+          <!--<table class="table groups hide"></table>
+          <div class="no-groups hide">You haven't created any groups yet.</div>-->
         </div>
       </div>
-      <script> var __initData = <?php echo json_encode($groups); ?>; </script>
     <?php } elseif($page === 'group-view') { ?>
       <div class="row groupview">
         <div class="span10">
-          <h2><?php $this->utility->safe($group['name']); ?></h2>
-          <p><?php $this->utility->safe($group['description']); ?></p>
+          <div class="group-meta"></div>
           <hr>
           <h3>Members <small><a href="#" class="toggle" data-target="form.groupMemberAdd">Add members</a></small></h3>
           <p class="blurb">
@@ -161,6 +193,8 @@
               </div>
             <?php } ?>
           </div>
+          <hr>
+          <div class="group-delete-meta delete-actions"></div>
         </div>
       </div>
       <script>

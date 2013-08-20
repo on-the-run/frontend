@@ -255,6 +255,14 @@ class ApiPhotoController extends ApiBaseController
     if(isset($_GET['generate']) && $_GET['generate'] == 'true')
       $generate = true;
 
+    $validToken = false;
+    $tokenValue = null;
+    if($token)
+    {
+      $validToken = true;
+      $tokenValue = $token['id'];
+    }
+
     foreach($photos as $key => $photo)
     {
       // we remove all path* entries to keep the interface clean and only return sizes explicitly requested

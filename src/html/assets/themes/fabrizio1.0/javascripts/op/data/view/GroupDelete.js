@@ -1,37 +1,11 @@
 (function($){
-  op.ns('data.view').GroupListItem = op.data.view.Editable.extend({
+  op.ns('data.view').GroupDelete = op.data.view.Editable.extend({
     initialize: function() {
       this.model.on('change', this.modelChanged, this);
     },
     model: this.model,
-    className: 'group-list-item-meta',
-    template    :_.template($('#group-list-item-meta').html()),
-    editable    : {
-      '.name.edit' : {
-        name: 'name',
-        placement: 'top',
-        title: 'Edit Group Name',
-        validate : function(value){
-          if($.trim(value) == ''){
-            return 'Please enter a name';
-          }
-          return null;
-        }
-      },
-      '.description.edit' : {
-        name: 'description',
-        placement: 'top',
-        title: 'Edit Group Description',
-        type: 'textarea',
-        emptytext: 'Add a description',
-        validate : function(value){
-          if($.trim(value) == ''){
-            return 'Please enter a description';
-          }
-          return null;
-        }
-      }
-    },
+    className: 'group-delete-meta',
+    template    :_.template($('#group-delete-meta').html()),
     events: {
       'click .delete': 'delete_',
       'click .undelete': 'undelete'
@@ -60,3 +34,4 @@
     }
   });
 })(jQuery);
+

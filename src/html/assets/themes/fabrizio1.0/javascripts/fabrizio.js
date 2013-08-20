@@ -200,8 +200,8 @@
         } else if(location.pathname.search(/^\/albums(.*)\/list/) === 0) {
           TBX.init.pages.albums.init();
           TBX.util.currentPage('albums');
-        } else if(location.pathname.search(/^\/manage\/groups\/list(.*)/) === 0) {
-          TBX.init.pages.manageGroups.init();
+        } else if(location.pathname.search(/^\/manage\/group\/(.*)\/view/) === 0) {
+          TBX.init.pages.manageGroup.init();
         } else if(location.pathname.search(/^\/photos(.*)\/list/) === 0) {
           if(location.pathname.search(/album-/) !== -1)
             TBX.util.currentPage('album');
@@ -272,25 +272,19 @@
         front: {
           init: function() {}
         },
-        manageGroups: {
+        manageGroup: {
           init: function() {
-            var groups = __initData, group, model, view, $el, $table, $noGroups;
-            if(groups.length == 0) {
-              $noGroups = $('div.no-groups');
-              $noGroups.show();
-            } else {
-              $table = $('table.groups').show();
-              for(i in groups) {
-                if(groups.hasOwnProperty(i)) {
-                  group = groups[i];
-                  $el = $('<tr class="group-'+group.id+'"/>').appendTo($table);
-                  op.data.store.Groups.add( group );
-                  model = op.data.store.Groups.get(group.id);
-                  view = new op.data.view.GroupListItem({model: model, el: $el});
-                  view.render();
-                }
-              }
-            }
+            var group = __initData, model, viewMeta, viewDelete, $el;
+            op.data.store.Groups.add( group );
+            model = op.data.store.Groups.get(group.id);
+
+            $el = $('.group-meta');
+            viewMeta = new op.data.view.Group({model: model, el: $el});
+            viewMeta.render();
+
+            $el = $('.group-delete-meta');
+            viewDelete = new op.data.view.GroupDelete({model: model, el: $el});
+            viewDelete.render();
           }
         },
         photo: {

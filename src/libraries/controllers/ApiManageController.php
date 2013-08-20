@@ -16,7 +16,12 @@ class ApiManageController extends ApiBaseController
     $configArray = parse_ini_string($configString, true);
 
     // set defaults since checkbox values are not passed if unchecked
-    $post = array_merge(array('enableBetaFeatures' => 0, 'allowDuplicate' => 0, 'downloadOriginal' => 0, 'hideFromSearchEngines' => 0, 'decreaseLocationPrecision' => 0), $_POST);
+    // skip defaults is for the admins form which doesn't pass any of these
+    if(!isset($_POST['skipDefaults']))
+      $post = array_merge(array('enableBetaFeatures' => 0, 'allowDuplicate' => 0, 'downloadOriginal' => 0, 'hideFromSearchEngines' => 0, 'decreaseLocationPrecision' => 0), $_POST);
+    else
+      $post = $_POST;
+
     foreach($post as $key => $value)
     {
       switch($key)
