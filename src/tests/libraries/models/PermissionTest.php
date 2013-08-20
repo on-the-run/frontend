@@ -127,6 +127,28 @@ class PermissionTest extends PHPUnit_Framework_TestCase
     $this->assertEquals($res, $visitorPermission);
   }
 
+  public function testCanUploadOwnerYes()
+  {
+    $user = $this->getMock('User', array('isOwner'));
+    $user->expects($this->any())
+      ->method('isOwner')
+      ->will($this->returnValue(true));
+    $this->permission->inject('user', $user);
+    $res = $this->permission->canUpload();
+    $this->assertTrue($res);
+  }
+
+  public function testCanUploadAdminYes()
+  {
+    $user = $this->getMock('User', array('isAdmin'));
+    $user->expects($this->any())
+      ->method('isAdmin')
+      ->will($this->returnValue(true));
+    $this->permission->inject('user', $user);
+    $res = $this->permission->canUpload();
+    $this->assertTrue($res);
+  }
+
   public function testCanUploadNo()
   {
     $this->permission->inject('stored', array('C'=>false));
@@ -153,5 +175,43 @@ class PermissionTest extends PHPUnit_Framework_TestCase
     $this->permission->inject('stored', array('C'=>array('a')));
     $res = $this->permission->canUpload('a');
     $this->assertTrue($res);
+  }
+
+  public function testGetCollapsed()
+  {
+    $this->permission->inject('stored', array('C'=>array('a'),'R'=>false,'U'=>false,'D'=>false));
+    $res = $this->permission->getCollapsed();
+    $this->assertEquals($res, array('C'));
+
+    $this->permission->inject('stored', array('C'=>array('a'),'R'=>false,'U'=>false,'D'=>true));
+    $res = $this->permission->getCollapsed();
+    $this->assertEquals($res, array('C','D'));
+  }
+
+  public function testAllowedAlbumsRead()
+  {
+    $albums = array('a','b','c');
+    sort($albums);
+    $this->permission->inject('stored', array('C'=>false,'R'=>array('a','b','c'),'U'=>false,'D'=>false));
+    $res = $this->permission->allowedAlbums('R');
+    sort($res);
+    $this->assertEquals($res, $albums);
+  }
+
+  public function testAllowedAlbumsCreate()
+  {
+    $albums = array('a','b','c');
+    sort($albums);
+    $this->permission->inject('stored', array('C'=>array('a','b','c'),'R'=>array('a','b','c'),'U'=>false,'D'=>false));
+    $res = $this->permission->allowedAlbums('C');
+    sort($res);
+    $this->assertEquals($res, $albums);
+  }
+
+  public function testAllowedAlbumsCreateEmpty()
+  {
+    $this->permission->inject('stored', array('C'=>false,'R'=>array('a','b','c'),'U'=>false,'D'=>false));
+    $res = $this->permission->allowedAlbums('C');
+    $this->assertEquals($res, array());
   }
 }

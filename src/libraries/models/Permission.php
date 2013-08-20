@@ -1,20 +1,38 @@
 <?php
 class Permission extends BaseModel
 {
-  protected $group, $stored;
+  protected $group, $stored, $user;
+  const create = 'C';
+  const read = 'R';
+  const update = 'U';
+  const delete = 'D';
 
   public function __construct()
   {
     parent::__construct();
     $this->group = new Group;
+    $this->user = new User;
+  }
+
+  // always default to the highest permission level
+  public function allowedAlbums($perm = self::create)
+  {
+    $permissions = $this->get();
+    if(empty($permissions[$perm]))
+      return array();
+    return $permissions[$perm];
   }
 
   public function canUpload($to = null)
   {
+    // owners/admins can upload
+    if($this->user->isAdmin())
+      return true;
+
     $permissions = $this->get();
 
     // first check if there are ANY upload permissions, if not then return false
-    if(!is_array($permissions['C']))
+    if(!is_array($permissions[self::create]))
       return false;
 
     // if not to specific album then return true
@@ -22,7 +40,7 @@ class Permission extends BaseModel
       return true;
 
     // at the moment $to is a string
-    return in_array($to, $permissions['C']);
+    return in_array($to, $permissions[self::create]);
   }
 
   public function get($cache = true)
@@ -30,18 +48,18 @@ class Permission extends BaseModel
     if($cache && $this->stored)
       return $this->stored;
 
-    $isOwner = $this->user->isOwner();
+    $isAdmin = $this->user->isAdmin();
     $email = $this->user->getEmailAddress();
     $permissions = array(
-      'C' => $isOwner,
-      'R' => $isOwner,
-      'U' => $isOwner,
-      'D' => $isOwner
+      self::create => $isAdmin,
+      self::read => $isAdmin,
+      self::update => $isAdmin,
+      self::delete => $isAdmin
     );
 
     // we only populate if we're not the owner (owner's have full access)
     //  and if there are albums granted to this user
-    if(!$isOwner)
+    if(!$isAdmin)
     {
       $groups = $this->db->getGroupsByUser($email);
       if(!empty($groups))
@@ -72,5 +90,18 @@ class Permission extends BaseModel
 
     $this->stored = $permissions;
     return $this->stored;
+  }
+
+  public function getCollapsed()
+  {
+    $permissions = $this->get();
+    $res = array();
+    foreach($permissions as $key => $perm)
+    {
+      if(!empty($perm))
+        $res[] = $key;
+    }
+
+    return $res;
   }
 }

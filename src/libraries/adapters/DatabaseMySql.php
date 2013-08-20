@@ -399,7 +399,7 @@ class DatabaseMySql implements DatabaseInterface
     * @param string $email email of viewer to determine which albums they have access to
     * @return mixed Array on success, FALSE on failure
     */
-  public function getAlbums($email, $limit = null, $offset = null)
+  public function getAlbums($email = null, $limit = null, $offset = null)
   {
     // TODO jmathai, confirm MySql is optimized for a high LIMIT
     if($limit === null)
@@ -410,10 +410,26 @@ class DatabaseMySql implements DatabaseInterface
     $limit = (int)$limit;
     $offset = (int)$offset;
 
-    if(!empty($email) && ($this->owner === $email || $this->getActor() === $email))
+    // if owner || admin then return all albums
+    // else if email is provided then get public and albums in allowed groups
+    // else return public albums
+    if($this->isAdmin())
     {
       $albums = $this->db->all("SELECT * FROM `{$this->mySqlTablePrefix}album` WHERE `owner`=:owner ORDER BY `name` LIMIT {$offset}, {$limit}", array(':owner' => $this->owner));
       $albumsCount = $this->db->one("SELECT COUNT(*) FROM `{$this->mySqlTablePrefix}album` WHERE `owner`=:owner ORDER BY `name`", array(':owner' => $this->owner));
+    }
+    elseif(!empty($email))
+    {
+      $groups = $this->getGroups($email); // case to array to handle false/null
+      $albumIds = $this->getAlbumsFromGroups($groups);
+
+      //$albumIds = array_keys($groups);
+      $inClause = '';
+      if(!empty($albumIds))
+        $inClause = sprintf("`id` IN ('%s') OR ", implode("','", $albumIds));
+      // get all albums with at least read permission
+      $albums = $this->db->all($sql = "SELECT * FROM `{$this->mySqlTablePrefix}album` WHERE `owner`=:owner AND ({$inClause} `countPublic`>0) ORDER BY `name` LIMIT {$offset}, {$limit}", array(':owner' => $this->owner));
+      $albumsCount = $this->db->one("SELECT COUNT(*) FROM `{$this->mySqlTablePrefix}album` WHERE `owner`=:owner AND ({$inClause} `countPublic`>0) ORDER BY `name` LIMIT {$offset}, {$limit}", array(':owner' => $this->owner));
     }
     else
     {
@@ -431,6 +447,40 @@ class DatabaseMySql implements DatabaseInterface
       $albums[0]['totalRows'] = intval($albumsCount['COUNT(*)']);
 
     return $albums;
+  }
+
+  /**
+    * INTENRAL FUNCTION NOT TO BE USED
+    *   We only use this to verify permissions, not to display albums
+    *   We risk leaking album names/ids if we use this
+    *   Before implementing for viewing purposes we need to implement group permission validation
+    *
+    * Get a list of albums for this photo
+    * If $expand = true then we return full album object, else IDs
+    * 
+    * @param string $id ID of the credential to get
+    * @param boolean $expand Pass true if you want full album objects
+    * @return mixed Array on success, FALSE on failure
+    */
+  public function getAlbumsForPhotoInternal($id, $expand = false)
+  {
+    $albums = $this->db->all("SELECT DISTINCT a.* 
+      FROM `{$this->mySqlTablePrefix}elementAlbum` AS ea INNER JOIN `{$this->mySqlTablePrefix}album` AS a ON ea.`album`=a.`id` AND ea.`owner`=a.`owner`
+      WHERE ea.`owner`=:owner AND ea.`type`='photo' AND ea.`element`=:id", array(':owner' => $this->owner, ':id' => $id));
+  
+    if(empty($albums))
+      return $albums;
+
+    $retval = array();
+    foreach($albums as $album)
+    {
+      if($expand)
+        $retval[] = $this->normalizeAlbum($album);
+      else
+        $retval[] = $album['id'];
+    }
+
+    return $retval;
   }
 
   /**
@@ -546,12 +596,8 @@ class DatabaseMySql implements DatabaseInterface
     * @param string $email email address to filter by
     * @return mixed Array on success, FALSE on failure
     */
-  public function getGroupsByUser(/*$email = null*/)
+  public function getGroupsByUser($email)
   {
-    // default to actor
-    if($email === null)
-      $email = $this->getActor();
-
     // if the user is the owner then return all active groups
     // else return groups this user is a member of
     if($email == $this->owner)
@@ -1597,6 +1643,28 @@ class DatabaseMySql implements DatabaseInterface
     $user = new User;
     $this->actor = $user->getEmailAddress();
     return $this->actor;
+  }
+
+  /**
+    * Get albumIds from Groups
+    *
+    * @param array Groups as returned from $db->getGroups()
+    * @return array Array of album IDs
+    */
+  protected function getAlbumsFromGroups($groups)
+  {
+    $albumIds = array();
+    foreach((array)$groups as $group)
+    {
+      if(!empty($group['album']))
+        $albumIds = array_merge($albumIds, array_keys($group['album']));
+    }
+
+    // de-dup and sort
+    $albumIds = array_unique($albumIds);
+    sort($albumIds);
+
+    return $albumIds;
   }
 
   /**

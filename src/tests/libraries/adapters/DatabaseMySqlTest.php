@@ -12,6 +12,11 @@ class DatabaseMySqlOverride extends DatabaseMySql
     return null;
   }
 
+  public function getAlbumsFromGroups($groups)
+  {
+    return parent::getAlbumsFromGroups($groups);
+  }
+
   protected function getActor()
   {
     return 'test@example.com';
@@ -202,6 +207,8 @@ class DatabaseMySqlTest extends PHPUnit_Framework_TestCase
 
   public function testGetAlbumsSuccess()
   {
+    $this->db->inject('isAdmin', true);
+
     $db = $this->getMock('MySqlMock', array('all','one'));
     $db->expects($this->any())
       ->method('all')
@@ -218,6 +225,8 @@ class DatabaseMySqlTest extends PHPUnit_Framework_TestCase
 
   public function testGetAlbumsWithExtrasSuccess()
   {
+    $this->db->inject('isAdmin', true);
+
     $db = $this->getMock('MySqlMock', array('all','one'));
     $db->expects($this->any())
       ->method('all')
@@ -234,6 +243,16 @@ class DatabaseMySqlTest extends PHPUnit_Framework_TestCase
     $this->assertEquals($res[0]['name'], 'unittest');
     $this->assertEquals($res[0]['cover'], 'foo', 'The MySql adapter did not return the album name for getAlbum with extra');
     $this->assertEquals($res[0]['totalRows'], 2);
+  }
+
+  public function testGetAlbumsFromGroup()
+  {
+    $groups = array(
+      array('album' => array('a' => array(1),'b' => array(2))),
+      array('album' => array('c' => array(1),'d' => array(2))),
+    );
+    $res = $this->db->getAlbumsFromGroups($groups);
+    $this->assertEquals($res, array('a','b','c','d'));
   }
 
   public function testGetCredentialSuccess()
@@ -289,7 +308,7 @@ class DatabaseMySqlTest extends PHPUnit_Framework_TestCase
     $this->markTestIncomplete('This test has not been implemented yet. #1247');
   }
 
-  public function testGetGruopsByUserFailure()
+  public function testGetGroupsByUserFailure()
   {
     $this->markTestIncomplete('This test has not been implemented yet. #1247');
   }

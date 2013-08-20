@@ -80,6 +80,7 @@ class ApiAlbumController extends ApiBaseController
 
   public function list_()
   {
+    $email = $this->user->getEmailAddress();
     $pageSize = $this->config->pagination->albums;
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
     if(isset($_GET['pageSize']))
@@ -87,15 +88,44 @@ class ApiAlbumController extends ApiBaseController
 
     $offset = ($pageSize * $page) - $pageSize;
     // model passes on the email
-    $albums = $this->album->getAlbums(null, $pageSize, $offset);
+    $albums = $this->album->getAlbums($email, $pageSize, $offset);
     if($albums === false)
       return $this->error('Could not retrieve albums', false);
 
-    $albumCountKey = $this->user->isAdmin() ? 'countPrivate' : 'countPublic';
-    foreach($albums as $key => $val)
+    // If the request is authenticated AND the user is not an admin then we have to descend into groups for permissions
+    // Else we just leave the albums as is and pull counts based on the appropriate column
+    if(getAuthentication()->isRequestAuthenticated() && !$this->user->isAdmin())
     {
-      $albums[$key]['count'] = $val[$albumCountKey];
-      unset($albums[$key]['countPublic'], $albums[$key]['countPrivate']);
+      $permission = Permission::read;
+      if(isset($_GET['permission']))
+        $permission = $_GET['permission'];
+
+      $totalRows = $albums[0]['totalRows'];
+      $permissionObj = new Permission;
+      $allowedAlbums = $permissionObj->allowedAlbums($permission);
+      foreach($albums as $key => $alb)
+      {
+        if(!in_array($alb['id'], $allowedAlbums))
+        {
+          unset($albums[$key]);
+          $totalRows--;
+        }
+        else
+        {
+          $albums[$key]['count'] = $alb['countPublic'];
+          unset($albums[$key]['countPublic'], $albums[$key]['countPrivate']);
+        }
+      }
+      $albums[0]['totalRows'] = $totalRows;
+    }
+    else
+    {
+      $albumCountKey = $this->user->isAdmin() ? 'countPrivate' : 'countPublic';
+      foreach($albums as $key => $val)
+      {
+        $albums[$key]['count'] = $val[$albumCountKey];
+        unset($albums[$key]['countPublic'], $albums[$key]['countPrivate']);
+      }
     }
 
     if(!empty($albums))

@@ -26,6 +26,8 @@ class Authentication
       $this->user = $params['user'];
     else
       $this->user = new User;
+
+    $this->permission = new Permission;
   } 
 
   /**
@@ -49,8 +51,13 @@ class Authentication
     *
     * @return boolean
     */
-  public function requireAuthentication($requireOwner = true)
+  public function requireAuthentication($requested = array('C','R','U','D'))
   {
+    // TODO !group enforce group permissions for oauth requests
+    
+    // first check if it's an oauth request
+    // else the user has to be logged in
+    // if they're logged in and not an admin we still have to verify permissions.
     if($this->credential->isOAuthRequest())
     {
       if(!$this->credential->checkRequest())
@@ -58,9 +65,18 @@ class Authentication
         OPException::raise(new OPAuthorizationOAuthException($this->credential->getErrorAsString()));
       }
     }
-    elseif(!$this->user->isLoggedIn() || ($requireOwner && !$this->user->isAdmin()))
+    elseif(!$this->user->isLoggedIn())
     {
       OPException::raise(new OPAuthorizationSessionException());
+    }
+    elseif(!$this->user->isAdmin())
+    {
+      $granted = $this->permission->getCollapsed();
+      // sort arrays for comparison
+      sort($requested);
+      sort($granted);
+      if(array_intersect($requested, $granted) !== $requested)
+        OPException::raise(new OPAuthorizationPermissionException());
     }
   }
 

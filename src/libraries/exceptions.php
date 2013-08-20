@@ -10,6 +10,7 @@ class OPException extends Exception
     {
       case 'OPAuthorizationException':
       case 'OPAuthorizationSessionException':
+      case 'OPAuthorizationPermissionException':
         if(isset($_GET['__route__']) && substr($_GET['__route__'], -5) == '.json')
         {
           echo json_encode($baseController->forbidden('You do not have sufficient permissions to access this page.'));
@@ -34,6 +35,7 @@ class OPException extends Exception
 class OPAuthorizationException extends OPException{}
 class OPAuthorizationOAuthException extends OPAuthorizationException{}
 class OPAuthorizationSessionException extends OPAuthorizationException{}
+class OPAuthorizationPermissionException extends OPAuthorizationException{}
 class OPInvalidImageException extends OPException{}
 class OPInvalidMapException extends OPException{}
 

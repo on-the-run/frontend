@@ -255,15 +255,6 @@ class ApiPhotoController extends ApiBaseController
     if(isset($_GET['generate']) && $_GET['generate'] == 'true')
       $generate = true;
 
-    // check permissions
-    $validToken = false;
-    $tokenValue = null;
-    if($token)
-    {
-      $validToken = true;
-      $tokenValue = $token['id'];
-    }
-
     foreach($photos as $key => $photo)
     {
       // we remove all path* entries to keep the interface clean and only return sizes explicitly requested
@@ -710,9 +701,7 @@ class ApiPhotoController extends ApiBaseController
 
     $optionsArr = array();
     if(!empty($options))
-    {
       $optionsArr = $this->parseFilters($options);
-    }
 
     // check permissions
     $validToken = false;
@@ -740,25 +729,19 @@ class ApiPhotoController extends ApiBaseController
         }
       }
       // if no valid token is found and the photo's permission is 0 then we
-      //  enforce privacy
+      //  enforce privacy via groups
       if($validToken === false && $photo['permission'] == 0)
       {
-        if(!$this->user->isLoggedIn() || (isset($photo['groups']) && empty($photo['groups'])))
+        // if the user isn't logged in or the aren't viewing as part of an album then we 404
+        if(!$this->user->isLoggedIn())
           return $this->notFound("Photo {$id} not found", false);
 
-        // can't call API since we're not the owner
-        $userGroups = $db->getGroups($this->user->getEmailAddress());
-        $isInGroup = false;
-        foreach($userGroups as $group)
-        {
-          if(in_array($group['id'], $photo['groups']))
-          {
-            $isInGroup = true;
-            break;;
-          }
-        }
-
-        if(!$isInGroup)
+        $permissionObj = new Permission;
+        $allowedAlbums = $permissionObj->allowedAlbums(Permission::read);
+        // Check that one or more of the photos albums are in allowedAlbums
+        $photoAlbums = $db->getAlbumsForPhotoInternal($id);
+        $check = array_intersect($allowedAlbums, $photoAlbums);
+        if(empty($check))
           return $this->notFound("Photo {$id} not found", false);
       }
     }
@@ -895,9 +878,7 @@ class ApiPhotoController extends ApiBaseController
     $shareTokenObj = new ShareToken;
 
     $token = null;
-    $permission = 0;
-    if($this->user->isAdmin())
-      $permission = 1;
+    $checkPermissions = true;
 
     // This section enables in path parameters which are normally GET
     $pageSize = $this->config->pagination->photos;
@@ -933,6 +914,7 @@ class ApiPhotoController extends ApiBaseController
         }
       }
     }
+
     // merge path parameters with GET parameters. GET parameters override
     if(isset($_GET['pageSize']) && intval($_GET['pageSize']) == $_GET['pageSize'])
       $pageSize = intval($_GET['pageSize']);
@@ -956,19 +938,31 @@ class ApiPhotoController extends ApiBaseController
           //  detail page we might be in an album context
           // we don't do this for a single photo because it could lead to 
           //  inadvertently leaking an entire album by passing a album token
-          //  but looking at a random photo (that might not belong to the album.
+          //  but looking at a random photo (that might not belong to the album)
           //  in this case the only protection is next/previous but the details 
           //  are leaked
           case 'album':
             if(isset($filters['album']) && $filters['album'] == $token['data'])
-              $permission = 1; // set permission to be pubilc for this request
+              $checkPermissions = false; // disable permission check
             break;
         }
       }
     }
 
-    if($permission == 0)
-      $filters['permission'] = $permission;
+    if($this->user->isAdmin())
+    {
+      $checkPermissions = false;
+    }
+    elseif(getAuthentication()->isRequestAuthenticated() && isset($filters['album']))
+    {
+      $permissionObj = new Permission();
+      $allowedAlbums = $permissionObj->allowedAlbums(Permission::read);
+      if(in_array($filters['album'], $allowedAlbums))
+        $checkPermissions = false;
+    }
+
+    if($checkPermissions)
+      $filters['permission'] = $checkPermissions;
 
     return array('filters' => $filters, 'token' => $token, 'pageSize' => $pageSize, 'protocol' => $protocol, 'page' => $page);
   }

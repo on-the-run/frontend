@@ -30,6 +30,7 @@ class OPException extends Exception
 class OPAuthorizationException extends OPException{}
 class OPAuthorizationOAuthException extends OPAuthorizationException{}
 class OPAuthorizationSessionException extends OPAuthorizationException{}
+class OPAuthorizationPermissionException extends OPAuthorizationException{}
 class OPInvalidImageException extends OPException{}
 
 // utility function

@@ -200,18 +200,18 @@ class PhotoController extends BaseController
     */
   public function upload()
   {
-    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireAuthentication(array('C'));
     $userObj = new User;
-    if(!$userObj->isAdmin())
+    /*if(!$userObj->isAdmin())
     {
       $this->route->run('/error/403');
       return;
-    }
+    }*/
     $this->theme->setTheme(); // defaults
     $crumb = $this->session->get('crumb');
     $template = sprintf('%s/upload.php', $this->config->paths->templates);
-    $groupsResp = $this->api->invoke('/groups/list.json');
-    $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0')));
+    //$groupsResp = $this->api->invoke('/groups/list.json');
+    $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0', 'permission' => Permission::create)));
     $preferences = array('permission' => $userObj->getAttribute('stickyPermission'));
     $body = $this->template->get($template, array('crumb' => $crumb, 'groups' => $groupsResp['result'], 'albums' => $albumsResp['result'], 'licenses' => $this->utility->getLicenses($userObj->getAttribute('stickyLicense')), 'preferences' => $preferences));
     $this->theme->display('template.php', array('body' => $body, 'page' => 'upload'));
@@ -224,18 +224,19 @@ class PhotoController extends BaseController
     */
   public function uploadBeta()
   {
-    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireAuthentication(array('C'));
+    // do we need this?
     $userObj = new User;
-    if(!$userObj->isAdmin())
+    /*if(!$userObj->isAdmin())
     {
       $this->route->run('/error/403');
       return;
-    }
+    }*/
     $this->theme->setTheme(); // defaults
     $crumb = $this->session->get('crumb');
     $template = sprintf('%s/upload-beta.php', $this->config->paths->templates);
-    $groupsResp = $this->api->invoke('/groups/list.json');
-    $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0')));
+    //$groupsResp = $this->api->invoke('/groups/list.json');
+    $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0', 'permission' => Permission::create)));
     $preferences = array('permission' => $userObj->getAttribute('stickyPermission'));
     $body = $this->template->get($template, array('crumb' => $crumb, 'groups' => $groupsResp['result'], 'albums' => $albumsResp['result'], 'licenses' => $this->utility->getLicenses($userObj->getAttribute('stickyLicense')), 'preferences' => $preferences));
     $this->theme->display('template.php', array('body' => $body, 'page' => 'upload'));

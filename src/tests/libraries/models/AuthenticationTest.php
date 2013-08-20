@@ -156,11 +156,25 @@ class AuthenticationTest extends PHPUnit_Framework_TestCase
     $this->authentication->inject('credential', $this->credential);
 
     // as long as no exception is thrown we're good
-    $this->authentication->requireAuthentication(false);
+    $permission = $this->getMock('Permission', array('getCollapsed'));
+    $permission->expects($this->any())
+      ->method('getCollapsed')
+      ->will($this->returnValue(array('C','R','U','D')));
+    $this->authentication->inject('permission', $permission);
+
+    $this->authentication->requireAuthentication(array('C','R','U','D'));
+    //
+    $permission = $this->getMock('Permission', array('getCollapsed'));
+    $permission->expects($this->any())
+      ->method('getCollapsed')
+      ->will($this->returnValue(array('C','R')));
+    $this->authentication->inject('permission', $permission);
+
+    $this->authentication->requireAuthentication(array('C'));
   }
 
   /**
-  * @expectedException OPAuthorizationSessionException
+  * @expectedException OPAuthorizationPermissionException
   */
   public function testRequireAuthenticationIsNotOwnerInvalidPassingNoParameter()
   {
@@ -179,11 +193,16 @@ class AuthenticationTest extends PHPUnit_Framework_TestCase
     $this->authentication->inject('credential', $this->credential);
 
     // as long as no exception is thrown we're good
+    $permission = $this->getMock('Permission', array('getCollapsed'));
+    $permission->expects($this->any())
+      ->method('getCollapsed')
+      ->will($this->returnValue(array('C')));
+    $this->authentication->inject('permission', $permission);
     $this->authentication->requireAuthentication();
   }
 
   /**
-  * @expectedException OPAuthorizationSessionException
+  * @expectedException OPAuthorizationPermissionException
   */
   public function testRequireAuthenticationIsNotOwnerInvalid()
   {
@@ -202,7 +221,12 @@ class AuthenticationTest extends PHPUnit_Framework_TestCase
     $this->authentication->inject('credential', $this->credential);
 
     // should thrown an exception
-    $this->authentication->requireAuthentication(true);
+    $permission = $this->getMock('Permission', array('getCollapsed'));
+    $permission->expects($this->any())
+      ->method('getCollapsed')
+      ->will($this->returnValue(array()));
+    $this->authentication->inject('permission', $permission);
+    $this->authentication->requireAuthentication(array('C'));
   }
 
   public function testRequireCrumbIsOAuth()
