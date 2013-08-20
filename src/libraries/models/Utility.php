@@ -288,12 +288,29 @@ class Utility
 
   public function isValidMimeType($filename)
   {
-    $type = get_mime_type($filename);
-    if(preg_match('/jpg|jpeg|gif|png$/', $type))
-      return true;
-    return false;
+    $media_type = $this->getMediaType($filename);
+    return in_array($media_type, array('photo', 'video'));
   }
 
+  public function getMediaType($filename)
+  {
+      $type = get_mime_type($filename);
+      switch ($type) {
+        case 'image/gif':
+        case 'image/jpeg':
+        case 'image/pjpeg':
+        case 'image/png':
+          return 'photo';
+        case 'video/mpeg':
+        case 'video/mp4':
+        case 'video/ogg':
+        case 'video/quicktime':
+        case 'video/webm':
+          return 'video';
+      }
+      return false;
+  }
+  
   public function getTemplate($template)
   {
     if(!$this->isMobile())
