@@ -17,7 +17,7 @@ OPU = (function() {
         var uploaderEl = $("#uploader");
         if(uploaderEl.length === 0)
           return;
-     
+
         if(typeof(uploaderEl.pluploadQueue) == 'undefined') {
           $("#uploader .insufficient").show();
           return;
@@ -26,18 +26,19 @@ OPU = (function() {
         uploaderEl.pluploadQueue({
             // General settings
             runtimes : 'html5',
-            url : '/photo/upload.json', // omit 409 since it's somewhat idempotent
+            url : '/media/upload.json', // omit 409 since it's somewhat idempotent
             max_file_size : '32mb',
             file_data_name : 'photo',
             //chunk_size : '1mb',
             unique_names : true,
             keep_droptext : true,
-     
+
             // Specify what files to browse for
             filters : [
-                {title : "Photos", extensions : "jpg,jpeg,gif,png"}
+                {title : "Photos", extensions : "jpg,jpeg,gif,png"},
+                {title : "Videos", extensions : "mov,mp4,webm,ogg"}
             ],
-     
+
             // Flash settings
             flash_swf_url : 'plupload.flash.swf',
             multipart_params:{
@@ -108,7 +109,7 @@ OPU = (function() {
                   groups = '';
                 else if(groups !== null)
                   groups = groups.join(',');
-                
+
                 uploader.settings.multipart_params.license = license;
                 uploader.settings.multipart_params.tags = tags;
                 uploader.settings.multipart_params.permission = permission;

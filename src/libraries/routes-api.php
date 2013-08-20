@@ -62,6 +62,15 @@ $apiObj->post('/?v?[2]?/notification/create.json', array('ApiNotificationControl
 $apiObj->post('/?v?[2]?/notification/delete.json', array('ApiNotificationController', 'delete'), EpiApi::external); // delete the next/current static notifiation
 
 /*
+ * Media endpoints
+ * All photo endpoints follow the same convention.
+ * Everything in []'s are optional
+ * /media[s]/{id}/{action}[/{additional}].json
+ */
+$apiObj->post('/?v?[1-2]?/media/upload.json', array('ApiMediaController', 'upload'), EpiApi::external); // upload media
+$apiObj->get('/?v?[1-2]?/media/([a-zA-Z0-9]+)/?(.+)?/view.json', array('ApiMediaController', 'view'), EpiApi::external); // get media information (/media/[{options}/]{id}/view.json)
+
+/*
  * Photo endpoints
  * All photo endpoints follow the same convention.
  * Everything in []'s are optional
@@ -85,6 +94,16 @@ $apiObj->get('/?v?[1-2]?/photo/([a-zA-Z0-9]+)/url/(\d+)x(\d+)x?([A-Zx]*)?.json',
 $apiObj->get('/?v?[1-2]?/photo/([a-zA-Z0-9]+)/nextprevious/?(.+)?.json', array('ApiPhotoController', 'nextPrevious'), EpiApi::external); // get a photo's next/previous (/photo/{id}/nextprevious[/{options}].json)
 //$apiObj->post('/photo/([a-zA-Z0-9]+)/create/([a-z0-9]+)/([0-9]+)x([0-9]+)x?(.*).json', array('ApiPhotoController', 'dynamic'), EpiApi::external);
 $apiObj->post('/?v?[1-2]?/photo/([a-zA-Z0-9]+)/transform.json', array('ApiPhotoController', 'transform'), EpiApi::external); // transform a photo
+
+/**
+ * Video endpoints
+ * All video endpoints follow the same convention.
+ * Everything in []'s are optional
+ * /video[s]/{id}/{action}[/{additional}].json
+ */
+$apiObj->post('/?v?[1-2]?/video/upload.json', array('ApiVideoController', 'upload'), EpiApi::external); // upload a video
+$apiObj->get('/?v?[1-2]?/video/([a-zA-Z0-9]+)/?(.+)?/view.json', array('ApiVideoController', 'view'), EpiApi::external); // get a video's information (/video/[{options}/]{id}/view.json)
+
 
 /*
  * Share endpoints
