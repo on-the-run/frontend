@@ -58,10 +58,10 @@
     </script>
     <script type="text/javascript" 
             src="<?php $this->utility->safe($this->config->site->cdnPrefix);?><?php echo getAssetPipeline(true)->setMode(AssetPipeline::combined)->
-      addJs($this->theme->asset('javascript', 'video/jwplayer.js', false))->
+      addJs($this->theme->asset('javascript', 'video/flowplayer.min.js', false))->
       getUrl(AssetPipeline::js, $this->config->site->mediaVersion, $this->config->site->mode === 'prod'); ?>" 
             data-swf="<?php $this->utility->safe($this->config->site->cdnPrefix);?><?php echo getAssetPipeline(true)->setMode(AssetPipeline::combined)->
-      addSwf($this->theme->asset('javascript', 'video/jwplayer.flash.swf', false))->
+      addSwf($this->theme->asset('javascript', 'video/flowplayer.swf', false))->
       getUrl(AssetPipeline::swf, $this->config->site->mediaVersion, $this->config->site->mode === 'prod'); ?>"
             data-html5="<?php $this->utility->safe($this->config->site->cdnPrefix);?><?php echo getAssetPipeline(true)->setMode(AssetPipeline::combined)->
       addJs($this->theme->asset('javascript', 'video/jwplayer.html5.js', false))->

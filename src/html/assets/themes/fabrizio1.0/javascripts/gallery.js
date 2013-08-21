@@ -217,7 +217,7 @@ var Gallery = (function($) {
 		overflow.css("overflow", "hidden");
     if(item.isVideo) {
       overflow.addClass("video");
-      overflow.append('<div class="video-element" id="video-element-'+item.id+'"/>');
+      overflow.append('<div class="video-element is-splash" style="height:'+configuration.thumbnailHeight+'px; background-image:url(\''+item[pathKey]+'\');" id="video-element-'+item.id+'"/>');
       videoQueue[item.id] = {
         id: item.id,
         file:'http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4',
