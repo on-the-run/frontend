@@ -8,7 +8,7 @@ var Gallery = (function($) {
 
   // defaults
   var configuration = {
-    'thubmnailHeight':180,
+    'thumbnailHeight':180,
   	'thumbnailSize':'960x180',
   	'marginsOfImage': 10,
   	'defaultWidthValue':120,
@@ -221,9 +221,10 @@ var Gallery = (function($) {
       videoQueue[item.id] = {
         id: item.id,
         file:'http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4',
-        image:item[pathKey],
-        width:item.vwidth,
-        height:'180'//configuration.thumbnailHeight
+        image: item[pathKey],
+        width: item.vwidth,
+        title: item.name,
+        height: configuration.thumbnailHeight
       };
       imageContainer.append(overflow);
     } else {
@@ -247,8 +248,12 @@ var Gallery = (function($) {
       overflow.append(link);
       imageContainer.append(overflow);
 
-      imageContainer.append(overflow);
-      
+      // fade in the image after load
+      img.bind("load", function () { 
+        $(this).fadeIn(400); 
+      });
+    }
+
       /**
        * Add meta information to bottom
        *
@@ -263,14 +268,6 @@ var Gallery = (function($) {
         , view = new op.data.view.PhotoGallery({model: model, el: meta});
       
       view.render();
-      
-      // End meta section
-
-      // fade in the image after load
-      img.bind("load", function () { 
-        $(this).fadeIn(400); 
-      });
-    }
 
 
     // insert calendar icon

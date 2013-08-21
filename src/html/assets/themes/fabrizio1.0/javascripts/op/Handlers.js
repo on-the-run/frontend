@@ -353,12 +353,23 @@
       TBX.upload.init();
     };
     this.custom.videoLoad = function(arg) {
-      var id = arg.id, elementId = 'video-element-'+id, params = {};
+      var id = arg.id, elementId = 'video-element-'+id, params = {}, player, $metaEl = $('#'+elementId).closest('.imageContainer').find('.photo-meta');
       params.file = arg.file;
       params.image = arg.image;
       params.width = parseInt(arg.width);
       params.height = parseInt(arg.height);
-      jwplayer(elementId).setup(params);
+      params.displaytitle = arg.tile;
+      params.primary = 'html5';
+
+      TBX.players.load(id, params);
+    };
+    this.custom.videoHideMeta = function() {
+      //this.animate({'opacity':'0'});
+      this.css('display','none');
+    };
+    this.custom.videoHideShow = function() {
+      //this.animate({'opacity':'1'});
+      this.css('display','block');
     };
   }
   
