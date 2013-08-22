@@ -15,29 +15,25 @@
       var $el = $('#'+elementId);
 
       $el.flowplayer({
-         engine:'flash',
-         src:swf,
-         // one video: a one-member playlist
-         playlist: [
-            [
-               { mp4:  "http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4" }
-            ]
-         ]
-      });
-//    console.log(id);
-//    console.log(params);
-//    params.flashplayer = swf;
-//    params.html5player = html5;
-//    params.modes = [
-//      {type:'html5'},{type:'flash'}
-//    ];
-
-//    player = jwplayer(elementId).setup(params);
-//    player.onPlay(TBX.handlers.custom.videoHideMeta.bind($metaEl));
-//    player.onPause(TBX.handlers.custom.videoHideShow.bind($metaEl));
-//    player.onComplete(TBX.handlers.custom.videoHideShow.bind($metaEl));
-
-//    players[id] = player;
+        engine:'html5',
+        src:swf,
+        // one video: a one-member playlist
+        playlist: [
+          [
+             { mp4:  "http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4" }
+          ]
+        ],
+        // TODO check if this ever works
+        width:params.width,
+        height:params.height,
+        canvas: {backgroundColor:'#000000'},
+        plugins: {
+          controls: {
+            progressColor: '#000000',
+            bufferColor: '#000000'
+          }
+        }
+      })
     };
   }
   
