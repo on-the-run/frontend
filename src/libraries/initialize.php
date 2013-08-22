@@ -93,6 +93,7 @@ else
   $paths->models = "{$baseDir}/libraries/models";
   $paths->templates = "{$baseDir}/templates";
   $paths->themes = "{$baseDir}/html/assets/themes";
+  $paths->vendor = "{$baseDir}/vendor";
   $configObj->set('paths', $paths);
 
   if(!$hasConfig)

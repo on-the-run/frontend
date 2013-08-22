@@ -761,6 +761,7 @@ class SetupController extends BaseController
       '{themes}' => "{$htmlDir}/assets/themes",
       '{temp}' => sys_get_temp_dir(),
       '{userdata}' => "{$baseDir}/userdata",
+      '{vendor}' => "{$baseDir}/vendor",
       '{exiftran}' => exec('which exiftran'),
       '{autoTagWithDate}' => '1',
       '{localSecret}' => $secret,
