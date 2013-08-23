@@ -13,4 +13,6 @@ src/html/assets/cache
 src/plugins/*
 src/libraries/plugins/*
 src/userdata/**/*
+composer.phar
 !default
+

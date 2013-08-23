@@ -551,6 +551,20 @@ class DatabaseMySql implements DatabaseInterface
   }
 
   /**
+   * Get a photo specified by $key
+   *
+   * @param string $key ID of the photo to retrieve
+   * @return mixed Array on success, FALSE on failure
+   */
+  public function getPhotoByKey($key)
+  {
+    $photo = $this->db->one("SELECT * FROM `{$this->mySqlTablePrefix}photo` WHERE `key`=:key AND owner=:owner", array(':key' => $key, ':owner' => $this->owner));
+    if(empty($photo))
+      return false;
+    return $this->normalizePhoto($photo);
+  }
+
+  /**
     * Get albums for a photo
     *
     * @param string $id ID of the photo to retrieve albums for
@@ -2178,6 +2192,7 @@ class DatabaseMySql implements DatabaseInterface
         case 'extraDropboxSource':
         case 'extraFileSystem':
         case 'extraDatabase':
+        case 'extraVideo':
           $extra[$key] = $value;
           break;
         case 'albums':
