@@ -582,11 +582,15 @@ class Photo extends Media
 
     // access $attribute values before being mutated
     $allowAutoRotate = isset($attributes['allowAutoRotate']) ? $attributes['allowAutoRotate'] : '1';
+    $skipOriginal = isset($attributes['skipOriginal']) ? $attributes['skipOriginal'] : '0';
+
 
     $attributes = $this->prepareAttributes($attributes, $localFile, $name);
 
     $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $attributes['dateTaken'], $allowAutoRotate);
     $attributes = $this->setPathAttributes($attributes, $resp['paths']);
+    if($skipOriginal === '1')
+      unset($resp['path']['pathOriginal'], $attributes['pathOriginal']);
 
     if($resp['status'])
     {
