@@ -41,17 +41,13 @@ abstract class Media extends BaseModel
     return in_array($media_type, array(self::typePhoto, self::typeVideo));
   }
 
-  public function prepareAttributes($attributes, $localFile)
+  public function prepareAttributes($attributes, $localFile, $name)
   {
     // make sure the defaults are set (this method sets to null if not already set)
     $attributes = $this->requireDefaults($attributes);
 
-    // for photos we read and inject exif/iptc from the file
-    $mediaType = $this->getMediaType($localFile);
-    $attributes = $this->setExifAttributes($attributes, $localFile, $mediaType);
-    $attributes = $this->setIptcAttributes($attributes, $localFile, $mediaType);
-
     // set all of the date and tag parameters
+    $attributes = $this->setMediaSpecificAttributes($attributes, $localFile);
     $attributes = $this->setDateAttributes($attributes);
     $attributes = $this->setTagAttributes($attributes);
 
@@ -60,12 +56,17 @@ abstract class Media extends BaseModel
     if(!empty($fsExtras))
       $attributes['extraFileSystem'] = $fsExtras;
 
+    if(!isset($attributes['filenameOriginal']) || empty($attributes['filenameOriginal']))
+      $attributes['filenameOriginal'] = $name;
+
     $attributes['owner'] = $this->owner;
     $attributes['actor'] = $this->getActor();
     $attributes['size'] = intval(filesize($localFile)/1024);
 
     // finally we remove attributes which aren't valid
     $attributes = $this->whitelistAttributes($attributes);
+    foreach($attributes as $key => $val)
+      $attributes[$key] = $this->trim($val);
     return $attributes;
   }
 
@@ -145,6 +146,35 @@ abstract class Media extends BaseModel
     return $attributes;
   }
 
+  protected function setMediaSpecificAttributes($attributes, $localFile)
+  {
+    $mediaType = $this->getMediaType($localFile);
+    switch($mediaType)
+    {
+      case self::typePhoto:
+        $attributes = $this->setExifAttributes($attributes, $localFile, $mediaType);
+        $attributes = $this->setIptcAttributes($attributes, $localFile, $mediaType);
+        break;
+      case self::typeVideo:
+        $attributes['extraVideo'] = array('isVideo' => true);
+        break;
+    }
+
+    return $attributes;
+  }
+
+  protected function setPathAttributes($attributes, $paths)
+  {
+    return array_merge(
+      $attributes,
+      array(
+        'pathOriginal' => $paths['pathOriginal'],
+        'pathBase' => isset($paths['pathBase']) ? $paths['pathBase'] : ''
+      )
+    );
+
+  }
+
   protected function setTagAttributes($attributes)
   {
     $tagObj = new Tag;
@@ -162,6 +192,14 @@ abstract class Media extends BaseModel
       $attributes['tags'] = $tagObj->sanitizeTagsAsString($attributes['tags']);
 
     return $attributes;
+  }
+
+  protected function trim($value)
+  {
+    if(gettype($value) !== 'string')
+      return $value;
+
+    return preg_replace('/^([ \r\n]+)|(\s+)$/', '', $value);
   }
 
   protected function whitelistAttributes($attributes)
@@ -189,7 +227,6 @@ abstract class Media extends BaseModel
       'pathBase' => 1,
       'pathOriginal' => 1,
       'permission' => 1,
-      'photo'=>1,
       'rotation'=>1,
       'size' => 1,
       'status' => 1,

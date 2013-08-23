@@ -27,8 +27,6 @@ class ApiVideoController extends ApiBaseController
     $httpObj = new Http;
     $attributes = $_REQUEST;
 
-    $this->logger->warn("IN VIDEO UPLOAD");
-    
     $this->plugin->invoke('onVideoUpload');
 
     // this determines where to get the photo from and populates $localFile and $name
@@ -46,22 +44,28 @@ class ApiVideoController extends ApiBaseController
 
     $attributes['isVideo'] = true;
     $attributes['hash'] = sha1_file($localFile);
+    $attributes['width'] = $this->config->photos->baseSize;
+    $attributes['height'] = $this->config->photos->baseSize;
     
     $videoId = $this->video->upload($localFile, $name, $attributes);
-    if ($videoId) {
-      $this->logger->warn(sprintf("GOT VIDEO ID: %s", $videoId));
+    if ($videoId)
+    {
       $apiResp = $this->api->invoke("/{$this->apiVersion}/photo/{$videoId}/view.json", EpiRoute::httpGet, array('_GET' => array()));
       $video = $apiResp['result'];
       $permission = isset($attributes['permission']) ? $attributes['permission'] : 0;
 
-      if ($video) {
+      // TODO webhooks and things
+      if ($video) { }
 
-      }
       $this->plugin->setData('video', $video);
       $this->plugin->invoke('onVideoUploaded');
+
+      $this->user->setAttribute('stickyPermission', $permission);
+      $this->user->setAttribute('stickyLicense', $video['license']);
+      return $this->created("Video {$videoId} uploaded successfully", $video);
     }
         
-    return $this->error('File upload failure', false);
+    return $this->error("File upload failure", false);
   }
 
 

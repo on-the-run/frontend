@@ -19,8 +19,6 @@ class ApiMediaController extends ApiBaseController
    */
   public function upload()
   {
-    $this->logger->warn("STARTING MEDIA");
-
     getAuthentication()->requireAuthentication();
     getAuthentication()->requireCrumb();
     $httpObj = new Http;
@@ -32,7 +30,6 @@ class ApiMediaController extends ApiBaseController
     // Get file mimetype
     $mediaType = Media::getMediaType($localFile);
 
-    $this->logger->warn(sprintf("GOT MEDIA TYPE: %s", $mediaType));
     // Invoke type-specific
     switch ($mediaType) {
       case 'photo':

@@ -6,6 +6,16 @@ class MediaWrapper extends Media
     parent::__construct();
   }
 
+  protected function readExif($localFile, $allowAutoRotate)
+  {
+    return array('foo' => 'bar', 'allowAutoRotate' => $allowAutoRotate);
+  }
+
+  protected function readIptc($localFile)
+  {
+    return array('foo' => 'bar', 'empty' => '', 'tags' => array('one','two'));
+  }
+
   public function setDateAttributes($attributes)
   {
     return parent::setDateAttributes($attributes);
@@ -26,19 +36,24 @@ class MediaWrapper extends Media
     return parent::setTagAttributes($attributes);
   }
 
+  public function setPathAttributes($attributes, $paths)
+  {
+    return parent::setPathAttributes($attributes, $paths);
+  }
+
+  public function setMediaSpecificAttributes($attributes, $localFile)
+  {
+    return parent::setMediaSpecificAttributes($attributes, $localFile);
+  }
+
+  public function trim($str)
+  {
+    return parent::trim($str);
+  }
+
   public function whitelistAttributes($attributes)
   {
     return parent::whitelistAttributes($attributes);
-  }
-
-  protected function readExif($localFile, $allowAutoRotate)
-  {
-    return array('foo' => 'bar', 'allowAutoRotate' => $allowAutoRotate);
-  }
-
-  protected function readIptc($localFile)
-  {
-    return array('foo' => 'bar', 'empty' => '', 'tags' => array('one','two'));
   }
 }
 
@@ -111,8 +126,42 @@ class MediaTest extends PHPUnit_Framework_TestCase
     $this->media->inject('config', $this->config);
 
     $attr = array('tags' => '1234');
-    $res = $this->media->prepareAttributes($attr, $this->photo);
+    $res = $this->media->prepareAttributes($attr, $this->photo, 'foo');
     $this->assertEquals('fsmetadata', $res['extraFileSystem']);
+  }
+
+  public function testPrepareAttributesWithOriginalFilenameEmpty()
+  {
+    $fs = $this->getMock('fs', array('getMetaData','getHost'));
+    $fs->expects($this->any())
+      ->method('getMetaData')
+      ->will($this->returnValue(null));
+    $fs->expects($this->any())
+      ->method('getHost')
+      ->will($this->returnValue('fshost'));
+    $this->media->inject('fs', $fs);
+    $this->media->inject('config', $this->config);
+
+    $attr = array('tags' => '1234', 'filenameOriginal' => '');
+    $res = $this->media->prepareAttributes($attr, $this->photo, 'passedin');
+    $this->assertEquals('passedin', $res['filenameOriginal']);
+  }
+
+  public function testPrepareAttributesWithOriginalFilenameOverride()
+  {
+    $fs = $this->getMock('fs', array('getMetaData','getHost'));
+    $fs->expects($this->any())
+      ->method('getMetaData')
+      ->will($this->returnValue(null));
+    $fs->expects($this->any())
+      ->method('getHost')
+      ->will($this->returnValue('fshost'));
+    $this->media->inject('fs', $fs);
+    $this->media->inject('config', $this->config);
+
+    $attr = array('tags' => '1234', 'filenameOriginal' => 'attribute');
+    $res = $this->media->prepareAttributes($attr, $this->photo, 'passedin');
+    $this->assertEquals('attribute', $res['filenameOriginal']);
   }
 
   public function testPrepareAttributesWithFSMetaDataNull()
@@ -128,7 +177,7 @@ class MediaTest extends PHPUnit_Framework_TestCase
     $this->media->inject('config', $this->config);
 
     $attr = array('tags' => '1234');
-    $res = $this->media->prepareAttributes($attr, $this->photo);
+    $res = $this->media->prepareAttributes($attr, $this->photo, 'foo');
     $this->assertTrue(!isset($res['extraFileSystem']));
   }
 
@@ -145,7 +194,7 @@ class MediaTest extends PHPUnit_Framework_TestCase
     $this->media->inject('config', $this->config);
 
     $attr = array('tags' => '1234');
-    $res = $this->media->prepareAttributes($attr, $this->photo);
+    $res = $this->media->prepareAttributes($attr, $this->photo, 'foo');
     $this->assertEquals('email@example.com', $res['owner'], 'Failed checking owner');
     //$this->assertEquals('email@example.com', $res['actor'], 'Failed checking actor');
     $this->assertEquals(2249, $res['size'], 'Failed checking size');
@@ -264,10 +313,60 @@ class MediaTest extends PHPUnit_Framework_TestCase
     $this->assertTrue(strstr($res['tags'], '2010') === false, 'Year Tags');
   }
 
+  public function testSetPaths()
+  {
+    $attrs = array('foo' => 'bar');
+    $paths = array( 'pathOriginal' => 'original', 'pathBase' => 'base');
+    $merged = array_merge($attrs, $paths);
+    $res = $this->media->setPathAttributes($attrs, $paths);
+    $this->assertEquals($merged, $res);
+  }
+
+  public function testSetPathsWithInvlidOverrideAttempt()
+  {
+    $attrs = array('foo' => 'bar', 'pathOriginal' => 'invalid');
+    $paths = array( 'pathOriginal' => 'original', 'pathBase' => 'base');
+    $merged = array_merge($attrs, $paths);
+    $res = $this->media->setPathAttributes($attrs, $paths);
+    $this->assertEquals($merged, $res);
+  }
+
+  public function testSetMediaSpecificAttributesForVideo()
+  {
+    $attrs = array('foo' => 'bar', 'pathOriginal' => 'invalid');
+    $res = $this->media->setMediaSpecificAttributes($attrs, $this->video);
+    $this->assertTrue($res['extraVideo']['isVideo'], $res);
+  }
+
   public function testWhitelistAttributes()
   {
     $res = $this->media->whitelistAttributes(array('invalid' => 'invalid', 'dateTaken' => '1293304870','tags'=>'one'));
     $this->assertTrue(isset($res['dateTaken']), 'dateTaken is valid');
     $this->assertTrue(!isset($res['invalid']), 'invalid is not valid');
+  }
+
+  public function testTrim()
+  {
+    // starts
+    $this->assertEquals("\tabcd", $this->media->trim("\tabcd"), 'Starts with tab fails');
+    $this->assertEquals("\t abcd", $this->media->trim("\t abcd"), 'Starts with tab then space fails');
+    $this->assertEquals("\tabcd", $this->media->trim(" \tabcd"), 'Starts with space then tab fails');
+    $this->assertEquals("abcd", $this->media->trim("\nabcd"), 'Starts with new line fails');
+    $this->assertEquals("\tabcd", $this->media->trim("\n\tabcd"), 'Starts with new line then tab fails');
+
+    // ends
+    $this->assertEquals("abcd", $this->media->trim("abcd\t"), 'Ends with tab fails');
+    $this->assertEquals("abcd", $this->media->trim("abcd\t "), 'Ends with tab then space fails');
+    $this->assertEquals("abcd", $this->media->trim("abcd \t"), 'Ends with space then tab fails');
+    $this->assertEquals("abcd", $this->media->trim("abcd\n"), 'Ends with new line fails');
+    $this->assertEquals("abcd", $this->media->trim("abcd\n\t"), 'Ends with new line then tab fails');
+
+    // starts and ends
+    $this->assertEquals("\tabcd", $this->media->trim("\tabcd\t"), 'Starts/Ends with tab fails');
+    $this->assertEquals("\t abcd", $this->media->trim("\t abcd\t "), 'Starts/Ends with tab then space fails');
+    $this->assertEquals("\tabcd", $this->media->trim(" \tabcd \t"), 'Starts/Ends with space then tab fails');
+    $this->assertEquals("abcd", $this->media->trim("\nabcd\n"), 'Starts/Ends with new line fails');
+    $this->assertEquals("\tabcd", $this->media->trim("\n\tabcd\n\t"), 'Starts/Ends with new line then tab fails');
+    $this->assertEquals(array(1), $this->media->trim(array(1)), 'Trim should not convert array to string');
   }
 }

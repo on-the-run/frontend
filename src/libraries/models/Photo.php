@@ -569,6 +569,8 @@ class Photo extends Media
 
   public function replace($id, $localFile, $name, $attributes = array())
   {
+    $tagObj = new Tag;
+
     // check if file type is valid
     if(!$this->isValidMimeType($localFile))
     {
@@ -576,74 +578,29 @@ class Photo extends Media
       return false;
     }
 
+    $filenameOriginal = $name;
+
+    // access $attribute values before being mutated
     $allowAutoRotate = isset($attributes['allowAutoRotate']) ? $attributes['allowAutoRotate'] : '1';
-    $exif = $this->readExif($localFile, $allowAutoRotate);
-    $iptc = $this->readIptc($localFile);
 
-    if(isset($attributes['dateTaken']) && !empty($attributes['dateTaken']))
-      $dateTaken = $attributes['dateTaken'];
-    elseif(isset($exif['dateTaken']))
-      $dateTaken = $exif['dateTaken'];
-    else
-      $dateTaken = time();
+    $attributes = $this->prepareAttributes($attributes, $localFile, $name);
 
-    $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $dateTaken, $allowAutoRotate);
-    $paths = $resp['paths'];
-
-    $attributes = array_merge($this->whitelistParams($attributes), $resp['paths']);
+    $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $attributes['dateTaken'], $allowAutoRotate);
+    $attributes = $this->setPathAttributes($attributes, $resp['paths']);
 
     if($resp['status'])
     {
       $this->logger->info("Photo ({$id}) successfully stored on the file system (replacement)");
-      $fsExtras = $this->fs->getMetaData($localFile);
 
-      if(!empty($fsExtras))
-        $attributes['extraFileSystem'] = $fsExtras;
-      $defaults = array('title', 'description', 'tags', 'latitude', 'longitude');
-      foreach($iptc as $iptckey => $iptcval)
-      {
-        if(empty($iptcval))
-          continue;
-
-        if($iptckey == 'tags')
-          $attributes['tags'] = implode(',', array_unique(array_merge((array)explode(',', $attributes['tags']), $iptcval)));
-        else if(!isset($attributes[$iptckey])) // do not clobber if already in $attributes #1011
-          $attributes[$iptckey] = $iptcval;
-      }
-
-      foreach($defaults as $default)
-      {
-        if(!isset($attributes[$default]))
-          $attributes[$default] = null;
-      }
-
-      $exifParams = array('width' => 'width', 'height' => 'height', 'cameraMake' => 'exifCameraMake', 'cameraModel' => 'exifCameraModel', 
-        'FNumber' => 'exifFNumber', 'exposureTime' => 'exifExposureTime', 'ISO' => 'exifISOSpeed', 'focalLength' => 'exifFocalLength', 'latitude' => 'latitude', 'longitude' => 'longitude');
-      foreach($exifParams as $paramName => $mapName)
-      {
-        // do not clobber if already in $attributes #1011
-        if(isset($exif[$paramName]) && !isset($attributes[$mapName]))
-          $attributes[$mapName] = $exif[$paramName];
-      }
-
-      $attributes['dateTakenDay'] = date('d', $dateTaken);
-      $attributes['dateTakenMonth'] = date('m', $dateTaken);
-      $attributes['dateTakenYear'] = date('Y', $dateTaken);
-      $attributes['hash'] = sha1_file($localFile);
-      $attributes['size'] = intval(filesize($localFile)/1024);
-      $attributes['host'] = $this->fs->getHost();
-      $attributes['filenameOriginal'] = $name;
-
-      $tagObj = new Tag;
+      // since tags can be created adhoc we need to ensure they're here
       if(isset($attributes['tags']) && !empty($attributes['tags']))
         $tagObj->createBatch($attributes['tags']);
-
-      $photo = $this->db->getPhoto($id);
 
       // normally we delete the existing photos
       // in some cases we may have already done this (migration)
       if(!isset($_POST['skipDeletes']) || empty($_POST['skipDeletes']))
       {
+        $photo = $this->db->getPhoto($id);
         $this->logger->info(sprintf('Purging photos in replace API for photo %s', $id));
         // purge photoVersions
         $delVersionsResp = $this->db->deletePhotoVersions($photo);
@@ -661,10 +618,6 @@ class Photo extends Media
         }
       }
 
-      // trim all the attributes
-      foreach($attributes as $key => $val)
-        $attributes[$key] = $this->trim($val);
-
       // update photo paths / hash
       $updPathsResp = $this->db->postPhoto($id, $attributes);
 
@@ -675,7 +628,7 @@ class Photo extends Media
         return true;
     }
 
-    $this->logger->warn('Could not upload files for replacement');
+    $this->logger->warn("Photo ({$id}) could NOT be replaced on the file system");
     return false;
   }
 
@@ -750,10 +703,10 @@ class Photo extends Media
     // access $attribute values before being mutated
     $allowAutoRotate = isset($attributes['allowAutoRotate']) ? $attributes['allowAutoRotate'] : '1';
 
-    $attributes = $this->prepareAttributes($attributes, $localFile);
+    $attributes = $this->prepareAttributes($attributes, $localFile, $name);
 
     $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $attributes['dateTaken'], $allowAutoRotate);
-    $paths = $resp['paths'];
+    $attributes = $this->setPathAttributes($attributes, $resp['paths']);
 
     if($resp['status'])
     {
@@ -762,19 +715,6 @@ class Photo extends Media
       // since tags can be created adhoc we need to ensure they're here
       if(isset($attributes['tags']) && !empty($attributes['tags']))
         $tagObj->createBatch($attributes['tags']);
-
-      $attributes = array_merge(
-        array(
-          'filenameOriginal' => $filenameOriginal,
-          'pathOriginal' => $paths['pathOriginal'],
-          'pathBase' => $paths['pathBase']
-        ),
-        $attributes
-      );
-
-      // trim all the attributes
-      foreach($attributes as $key => $val)
-        $attributes[$key] = $this->trim($val);
 
       $stored = $this->db->putPhoto($id, $attributes, $attributes['dateTaken']);
       unlink($localFile);
@@ -891,11 +831,6 @@ class Photo extends Media
     if($allowAutoRotate != '0' && is_executable($this->config->modules->exiftran))
       return true;
     return false;
-  }
-
-  protected function trim($string)
-  {
-    return preg_replace('/^([ \r\n]+)|(\s+)$/', '', $string);
   }
 
   private function createAndStoreBaseAndOriginal($name, $localFile, $dateTaken, $allowAutoRotate)

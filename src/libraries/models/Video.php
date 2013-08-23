@@ -35,10 +35,12 @@ class Video extends Media
   {
     $ext = substr($videoName, (strrpos($videoName, '.')+1));
     $rootName = preg_replace('/[^a-zA-Z0-9.-_]/', '-', substr($videoName, 0, (strrpos($videoName, '.'))));
+    $baseName = sprintf('%s-%s.%s', $rootName, dechex(rand(1000000,9999999)), $ext);
     $originalName = sprintf('%s-%s.%s', $rootName, uniqid(), $ext);
     
     return array(
-      'pathOriginal' => sprintf('/video/base/%s/%s', date('Ym', $dateTaken), $originalName)
+      'pathOriginal' => sprintf('/video/base/%s/%s', date('Ym', $dateTaken), $originalName),
+      'pathBase' => sprintf('/base/%s/%s', date('Ym', $dateTaken), $baseName)
     );
   }
 
@@ -54,6 +56,13 @@ class Video extends Media
   {
     $tagObj = new Tag;
 
+    // check if file type is valid
+    if(!$this->isValidMimeType($localFile))
+    {
+      $this->logger->warn(sprintf('Invalid mime type for %s', $localFile));
+      return false;
+    }
+
     $id = $this->user->getNextId('photo');
     if ($id === false)
     {
@@ -61,54 +70,51 @@ class Video extends Media
       return false;
     }
 
-    if(isset($attributes['dateTaken']) && !empty($attributes['dateTaken']))
-      $dateTaken = $attributes['dateTaken'];
-    else
-      $dateTaken = time();
+    $filenameOriginal = $name;
 
-    $resp = $this->storeOriginal($name, $localFile, $dateTaken);
-    $paths = $resp['paths'];
+    $attributes = $this->prepareAttributes($attributes, $localFile, $name);
 
-    $attributes = $this->whitelistParams($attributes);
+    $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $attributes['dateTaken']);
+    $attributes = $this->setPathAttributes($attributes, $resp['paths']);
 
     if ($resp['status'])
     {
       $this->logger->info("Video ({$id}) successfully stored on the file system");
-      
-      if(isset($attributes['dateUploaded']) && !empty($attributes['dateUploaded']))
-        $dateUploaded = $attributes['dateUploaded'];
-      else
-        $dateUploaded = time();
 
       if(isset($attributes['tags']) && !empty($attributes['tags']))
         $tagObj->createBatch($attributes['tags']);
 
-      $attributes['owner'] = $this->owner;
-      $attributes['actor'] = $this->getActor();
-
-      $stored = $this->db->putPhoto($id, $attributes, $dateTaken);
+      $stored = $this->db->putPhoto($id, $attributes, $attributes['dateTaken']);
       unlink($localFile);
       if($stored)
       {
-        $this->logger->info("Photo ({$id}) successfully stored to the database");
+        $this->logger->info("Video ({$id}) successfully stored to the database");
         return $id;
       }
       else
       {
-        $this->logger->warn("Photo ({$id}) could NOT be stored to the database");
+        $this->logger->warn("Video ({$id}) could NOT be stored to the database");
         return false;
       }
     }
+
+    $this->logger->warn("Video ({$id}) could NOT be stored to the file system");
+    return false;
   }
 
-
-  private function storeOriginal($name, $localFile, $dateTaken)
+  private function createAndStoreBaseAndOriginal($name, $localFile, $dateTaken)
   {
     $paths = $this->generatePaths($name, $dateTaken);
 
+    // we need to copy the processing thumbnail to a temp location
+    $tempFile = tempnam(sys_get_temp_dir(), 'opme-');
+    $processingThumbnail = sprintf('%s/assets/images/video-placeholder.jpg', $this->config->paths->docroot);
+    copy($processingThumbnail, $tempFile);
+
     $uploaded = $this->fs->putPhotos(
       array(
-        array($localFile => array($paths['pathOriginal'], $dateTaken))
+        array($localFile => array($paths['pathOriginal'], $dateTaken)),
+        array($tempFile => array($paths['pathBase'], $dateTaken))
       )
     );
     

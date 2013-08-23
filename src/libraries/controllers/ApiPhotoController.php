@@ -338,28 +338,47 @@ class ApiPhotoController extends ApiBaseController
     // this determines where to get the photo from and populates $localFile and $name
     extract($this->parsePhotoFromRequest());
 
-    $hash = sha1_file($localFile);
+    // check if file type is valid
+    if(!$this->photo->isValidMimeType($localFile))
+    {
+      $this->logger->warn(sprintf('Invalid mime type for %s', $localFile));
+      unlink($localFile);
+      return $this->error('Invalid mime type', false);;
+    }
+
+    if(isset($attributes['returnSizes']))
+      $returnSizes = implode(',', array_unique((array)explode(',', $attributes['returnSizes'])));
+
+    if(isset($returnSizes))
+    {
+      $sizes = (array)explode(',', $returnSizes);
+      if(!in_array('100x100xCR', $sizes))
+        $sizes[] = '100x100xCR';
+    }
+    else
+    {
+      $sizes = array('100x100xCR');
+    }
+
+    // set default to config and override with parameter
     $allowDuplicate = $this->config->site->allowDuplicate;
     if(isset($attributes['allowDuplicate']))
       $allowDuplicate = $attributes['allowDuplicate'];
+
+    // we have this here since we might have to do the duplicate check and we don't want to call sha1_file twice
+    // on some replace.json calls we don't touch the hash so we have to check if the skipHash parameter is passed in
+    $hash = sha1_file($localFile);
+    if(!isset($attributes['skipHash']) || empty($attributes['skipHash']))
+      $attributes['hash'] = $hash;
     if($allowDuplicate == '0')
     {
-      $hashResp = $this->api->invoke("/{$this->apiVersion}/photos/list.json", EpiRoute::httpGet, array('_GET' => array('hash' => $hash)));
-      if($hashResp['result'][0]['totalRows'] > 0)
-        return $this->conflict('This photo already exists based on a sha1 hash. To allow duplicates pass in allowDuplicate=1', false);
-    }
-
-    // TODO put this in a whitelist function (see upload())
-    if(isset($attributes['__route__']))
-      unset($attributes['__route__']);
-    if(isset($attributes['photo']))
-      unset($attributes['photo']);
-    if(isset($attributes['crumb']))
-      unset($attributes['crumb']);
-    if(isset($attributes['returnSizes']))
-    {
-      $returnSizes = implode(',', array_unique((array)explode(',', $attributes['returnSizes'])));
-      unset($attributes['returnSizes']);
+      $hashResp = $this->api->invoke("/{$this->apiVersion}/photos/list.json", EpiRoute::httpGet, array('_GET' => array('hash' => $hash, 'returnSizes' => implode(',', $sizes))));
+      // the second condition is for backwards compatability between v2 and v1. See #1086
+      if(!empty($hashResp['result']) && $hashResp['result'][0]['totalRows'] > 0)
+      {
+        unlink($localFile);
+        return $this->conflict('This photo already exists based on a sha1 hash. To allow duplicates pass in allowDuplicate=1', $hashResp['result'][0]);
+      }
     }
 
     $status = $this->photo->replace($id, $localFile, $name, $attributes);
@@ -425,27 +444,11 @@ class ApiPhotoController extends ApiBaseController
       return $this->error('Invalid mime type', false);;
     }
 
-    // TODO put this in a whitelist function (see replace())
-    if(isset($attributes['__route__']))
-      unset($attributes['__route__']);
-    if(isset($attributes['photo']))
-      unset($attributes['photo']);
-    if(isset($attributes['crumb']))
-      unset($attributes['crumb']);
     if(isset($attributes['returnSizes']))
-    {
       $returnSizes = implode(',', array_unique((array)explode(',', $attributes['returnSizes'])));
-      unset($attributes['returnSizes']);
-    }
 
     $photoId = false;
 
-    // set default to config and override with parameter
-    $allowDuplicate = $this->config->site->allowDuplicate;
-    if(isset($attributes['allowDuplicate']))
-      $allowDuplicate = $attributes['allowDuplicate'];
-
-    // jmathai - check where this gets set
     if(isset($returnSizes))
     {
       $sizes = (array)explode(',', $returnSizes);
@@ -456,6 +459,11 @@ class ApiPhotoController extends ApiBaseController
     {
       $sizes = array('100x100xCR');
     }
+
+    // set default to config and override with parameter
+    $allowDuplicate = $this->config->site->allowDuplicate;
+    if(isset($attributes['allowDuplicate']))
+      $allowDuplicate = $attributes['allowDuplicate'];
 
     // TODO refactor this into the model
     // we have this here since we might have to do the duplicate check and we don't want to call sha1_file twice
