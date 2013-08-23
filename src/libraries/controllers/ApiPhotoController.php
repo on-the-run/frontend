@@ -418,8 +418,7 @@ class ApiPhotoController extends ApiBaseController
     extract($this->parsePhotoFromRequest());
 
     // check if file type is valid
-    $utility = new Utility;
-    if(!$utility->isValidMimeType($localFile))
+    if(!$this->photo->isValidMimeType($localFile))
     {
       $this->logger->warn(sprintf('Invalid mime type for %s', $localFile));
       unlink($localFile);
@@ -441,7 +440,6 @@ class ApiPhotoController extends ApiBaseController
 
     $photoId = false;
 
-    $attributes['hash'] = sha1_file($localFile);
     // set default to config and override with parameter
     $allowDuplicate = $this->config->site->allowDuplicate;
     if(isset($attributes['allowDuplicate']))
@@ -459,6 +457,9 @@ class ApiPhotoController extends ApiBaseController
       $sizes = array('100x100xCR');
     }
 
+    // TODO refactor this into the model
+    // we have this here since we might have to do the duplicate check and we don't want to call sha1_file twice
+    $attributes['hash'] = sha1_file($localFile);
     if($allowDuplicate == '0')
     {
       $hashResp = $this->api->invoke("/{$this->apiVersion}/photos/list.json", EpiRoute::httpGet, array('_GET' => array('hash' => $attributes['hash'], 'returnSizes' => implode(',', $sizes))));

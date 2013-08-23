@@ -10,9 +10,6 @@ class ApiMediaController extends ApiBaseController
   public function __construct()
   {
     parent::__construct();
-    $this->photo = new Photo;
-    $this->tag = new Tag;
-    $this->user = new User;
   }
 
   /**
@@ -33,12 +30,11 @@ class ApiMediaController extends ApiBaseController
     extract($this->parseMediaFromRequest());
     
     // Get file mimetype
-    $utility = new Utility;
-    $media_type = $utility->getMediaType($localFile);
+    $mediaType = Media::getMediaType($localFile);
 
-    $this->logger->warn(sprintf("GOT MEDIA TYPE: %s", $media_type));
+    $this->logger->warn(sprintf("GOT MEDIA TYPE: %s", $mediaType));
     // Invoke type-specific
-    switch ($media_type) {
+    switch ($mediaType) {
       case 'photo':
         return $this->api->invoke("/{$this->apiVersion}/photo/upload.json", EpiRoute::httpPost);
       case 'video':

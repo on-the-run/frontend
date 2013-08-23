@@ -69,7 +69,6 @@ class AssetPipeline
 
   public function addSwf($src)
   {
-    error_log(sprintf('%s%s', $this->docroot, $src));
     if(file_exists($path = sprintf('%s%s', $this->docroot, $src)))
       $this->addAsset($path, 'swf');
 

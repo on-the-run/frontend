@@ -49,8 +49,8 @@ class ApiVideoController extends ApiBaseController
     
     $videoId = $this->video->upload($localFile, $name, $attributes);
     if ($videoId) {
-      $this->logger->warn(sprintf("GOT VIDEO ID: %d", $videoId));
-      $apiResp = $this->api->invoke("/{$this->apiVersion}/video/{$videoId}/view.json", EpiRoute::httpGet, array('_GET' => array()));
+      $this->logger->warn(sprintf("GOT VIDEO ID: %s", $videoId));
+      $apiResp = $this->api->invoke("/{$this->apiVersion}/photo/{$videoId}/view.json", EpiRoute::httpGet, array('_GET' => array()));
       $video = $apiResp['result'];
       $permission = isset($attributes['permission']) ? $attributes['permission'] : 0;
 

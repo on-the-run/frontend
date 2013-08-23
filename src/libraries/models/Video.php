@@ -5,7 +5,7 @@
  * Operations related to videos
  * @author James Walker <walkah@walkah.net>
  */
-class Video extends BaseModel
+class Video extends Media
 {
   public function __construct($params = null)
   {
@@ -52,14 +52,14 @@ class Video extends BaseModel
    */
   public function upload($localFile, $name, $attributes = array())
   {
-    
+    $tagObj = new Tag;
+
     $id = $this->user->getNextId('photo');
-    if ($id === false) {
+    if ($id === false)
+    {
       $this->logger->crit('Could not fetch next photo ID');
       return false;
     }
-
-    $tagObj = new Tag;
 
     if(isset($attributes['dateTaken']) && !empty($attributes['dateTaken']))
       $dateTaken = $attributes['dateTaken'];
@@ -69,7 +69,10 @@ class Video extends BaseModel
     $resp = $this->storeOriginal($name, $localFile, $dateTaken);
     $paths = $resp['paths'];
 
-    if ($resp['status']) {
+    $attributes = $this->whitelistParams($attributes);
+
+    if ($resp['status'])
+    {
       $this->logger->info("Video ({$id}) successfully stored on the file system");
       
       if(isset($attributes['dateUploaded']) && !empty($attributes['dateUploaded']))
