@@ -20,7 +20,7 @@
         // one video: a one-member playlist
         playlist: [
           [
-             { mp4:  "http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4" }
+             { mp4:  params.file }
           ]
         ],
         // TODO check if this ever works

@@ -334,7 +334,7 @@ var Gallery = (function($) {
 				for(var i in rows[r]) {
 					var item = rows[r][i];
           createImageElement(photosContainer, item);
-          if(item.isVideo)
+          if(item.video)
             OP.Util.fire('video:load', videoQueue[item.id]);
 				}
 			}
