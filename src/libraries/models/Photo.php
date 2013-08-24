@@ -548,7 +548,13 @@ class Photo extends Media
       return $id;
 
     $tagObj = new Tag;
-    $attributes = $this->whitelistParams($attributes);
+
+    // to preserve json columns we have to do complete writes
+    $currentPhoto = $this->db->getPhoto($id);
+    unset($currentPhoto['id']);
+    $attributes = array_merge($currentPhoto, $attributes);
+
+    $attributes = $this->whitelistAttributes($attributes);
     if(isset($attributes['tags']) && !empty($attributes['tags']))
       $attributes['tags'] = $tagObj->sanitizeTagsAsString($attributes['tags']);
 

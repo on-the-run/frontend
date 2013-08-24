@@ -156,7 +156,7 @@ abstract class Media extends BaseModel
         $attributes = $this->setIptcAttributes($attributes, $localFile, $mediaType);
         break;
       case self::typeVideo:
-        $attributes['extraVideo'] = array('isVideo' => true);
+        $attributes['video'] = true;
         break;
     }
 
@@ -235,7 +235,7 @@ abstract class Media extends BaseModel
       'views' => 1,
       'width' => 1,
     );
-    $patterns = array('exif.*','date.*','extra.*');
+    $patterns = array('exif.*','date.*','extra.*','video*');
     foreach($attributes as $key => $val)
     {
       if(isset($matches[$key]))

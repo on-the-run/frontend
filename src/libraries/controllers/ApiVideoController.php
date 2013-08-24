@@ -42,7 +42,7 @@ class ApiVideoController extends ApiBaseController
 
     $videoId = false;
 
-    $attributes['isVideo'] = true;
+    $attributes['video'] = true;
     $attributes['hash'] = sha1_file($localFile);
     $attributes['width'] = $this->config->photos->baseSize;
     $attributes['height'] = $this->config->photos->baseSize;
@@ -58,6 +58,7 @@ class ApiVideoController extends ApiBaseController
       if ($video) { }
 
       $this->plugin->setData('video', $video);
+      $this->plugin->setData('videoId', $videoId);
       $this->plugin->invoke('onVideoUploaded');
 
       $this->user->setAttribute('stickyPermission', $permission);

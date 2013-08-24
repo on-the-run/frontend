@@ -52,11 +52,11 @@ class AwsTranscoderPlugin extends PluginBase
     
     $video = $this->plugin->getData('video');
     $videoId = $this->plugin->getData('videoId');
-    
+
     $args = array(
       'PipelineId' => $conf->pipelineId,
       'Input' => array(
-        'Key' => substr($video['pathOriginal'], 1),
+        'Key' => substr(parse_url($video['pathOriginal'], PHP_URL_PATH), 1),
         'FrameRate' => 'auto',
         'Resolution' => 'auto',
         'AspectRatio' => 'auto',
@@ -84,10 +84,12 @@ class AwsTranscoderPlugin extends PluginBase
       $result = $this->transcoder->createJob($args);
       $job = $result->get('Job');
 
-      $video['key'] = $job['Id'];
-      $video['extraVideo']['status'] = 'pending';
-      $video['extraVideo']['jobId'] = $job['Id'];
-      $this->db->postPhoto($videoId, $video);
+      $updateParams = array();
+      $updateParams['key'] = sha1($job['Id']);
+      $updateParams['videoStatus'] = 'pending';
+      $updateParams['videoJobId'] = $job['Id'];
+      $photoObj = new Photo;
+      $status = $photo->update($videoId, $updateParams);
     }
     catch (Exception $e) {
       $this->logger->crit("Unable to create Job: ". $e->getMessage());
@@ -145,24 +147,41 @@ class AwsTranscoderPlugin extends PluginBase
 
     switch ($message->state) {
       case 'ERROR':
-        $this->logger->error('Transcoding failed for jobId: '. $message->jobId);
+        $this->logger->crit('Transcoding failed for jobId: '. $message->jobId);
         break;
       case 'COMPLETED':
-        $photo = $this->db->getPhotoByKey($message->jobId);
+        $photo = $this->db->getPhotoByKey(sha1($message->jobId));
 
-        // TODO(walkah): This isn't working ...
-        $thumbnailFile = $this->fs->getPhoto(str_replace('{count}', '00001.png', $message->outputs[0]->thumbnailPattern));
-        
+        // get outputs
+        list(,$output) = each($message->outputs);
+
         $params = array(
-          'photo' => $thumbnailFile
+          'skipOriginal' => '1',
+          'photo' => str_replace('{count}', '00001', sprintf('http://opmeshared.s3.amazonaws.com/%s.png', $output->thumbnailPattern)),
+          'videoStatus' => 'completed',
+          'videoSource' => sprintf('http://opmeshared.s3.amazonaws.com/%s', $output->key)
         );
-        foreach ($message->outputs as $output) {
-          $params['extraVideo']['output'] = $output->key;
+
+        $utilityObj = new Utility;
+        // create a temporary oauth credential
+        // then convert it to an access token
+        // then get the oauth token including all keys
+        $credentialObj = getCredential();
+        $consumerKey = $credentialObj->create('Transcoding Token');
+        $credentialObj->convertToken($consumerKey, Credential::typeAccess);
+        $oauthCredential = $credentialObj->getConsumer($consumerKey);
+
+        try
+        {
+          $oauth = new OAuth($oauthCredential['id'],$oauthCredential['clientSecret'],OAUTH_SIG_METHOD_HMACSHA1,OAUTH_AUTH_TYPE_AUTHORIZATION);
+          $oauth->setToken($oauthCredential['userToken'],$oauthCredential['userSecret']);
+          $oauth->fetch(sprintf('http://%s/photo/%s/replace.json', $utilityObj->getHost(), $photo['id']), $params, OAUTH_HTTP_METHOD_POST);
+        } catch(OAuthException $E) {
+          $this->logger->crit(sprintf('OAuth error from replace call on photo (%s) : %s', $photo['id'], $E->lastResponse));
         }
 
-        $photoId = $photo['id'];
-        $apiVersion = Request::getApiVersion();
-        $this->api->invoke('/{$apiVersion}/photo/{$photoId}/replace.json', EpiRoute::httpPost, array('_POST' => $params));
+        // TODO what should we do if this fails? (jmathai)
+        $credentialObj->delete($consumerKey);
         break;
         
     }
@@ -183,7 +202,7 @@ class AwsTranscoderPlugin extends PluginBase
     $parts = pathinfo($video['pathOriginal']);
 
     return array(
-      'video' => sprintf('video/custom/%s/%s-%s.%s', date('Ym', $video['dateTaken']), $parts['filename'], $present['Id'], $preset['Container']),
+      'video' => sprintf('video/custom/%s/%s-%s.%s', date('Ym', $video['dateTaken']), $parts['filename'], $preset['Id'], $preset['Container']),
       'thumbnail' => sprintf('video/custom/%s/%s-{count}', date('Ym', $video['dateTaken']), $parts['filename'])
     );
   }  

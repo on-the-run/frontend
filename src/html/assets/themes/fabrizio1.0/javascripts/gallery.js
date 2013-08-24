@@ -215,12 +215,13 @@ var Gallery = (function($) {
 		overflow.css("width", ""+$nz(item.vwidth, defaultWidthValue)+"px");
 		overflow.css("height", ""+$nz(item[pathKey][1], defaultHeightValue)+"px");
 		overflow.css("overflow", "hidden");
-    if(item.isVideo) {
+    if(typeof(item.video) !== 'undefined') {
       overflow.addClass("video");
       overflow.append('<div class="video-element is-splash" style="height:'+configuration.thumbnailHeight+'px; background-image:url(\''+item[pathKey]+'\');" id="video-element-'+item.id+'"/>');
       videoQueue[item.id] = {
         id: item.id,
-        file:'http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4',
+        //file:'http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4',
+        file:item.videoSource,
         image: item[pathKey],
         width: item.vwidth,
         title: item.name,
