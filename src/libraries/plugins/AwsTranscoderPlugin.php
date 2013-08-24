@@ -89,7 +89,7 @@ class AwsTranscoderPlugin extends PluginBase
       $updateParams['videoStatus'] = 'pending';
       $updateParams['videoJobId'] = $job['Id'];
       $photoObj = new Photo;
-      $status = $photo->update($videoId, $updateParams);
+      $status = $photoObj->update($videoId, $updateParams);
     }
     catch (Exception $e) {
       $this->logger->crit("Unable to create Job: ". $e->getMessage());
