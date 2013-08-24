@@ -2194,7 +2194,7 @@ class DatabaseMySql implements DatabaseInterface
         case 'extraDatabase':
         case 'video':
         case 'videoStatus':
-        case 'videoSources':
+        case 'videoSource':
         case 'videoJobId':
           $extra[$key] = $value;
           break;

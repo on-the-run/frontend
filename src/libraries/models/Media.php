@@ -235,7 +235,7 @@ abstract class Media extends BaseModel
       'views' => 1,
       'width' => 1,
     );
-    $patterns = array('exif.*','date.*','extra.*','video*');
+    $patterns = array('exif.*','date.*','extra.*','video.*');
     foreach($attributes as $key => $val)
     {
       if(isset($matches[$key]))

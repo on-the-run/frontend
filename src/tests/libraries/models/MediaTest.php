@@ -335,16 +335,7 @@ class MediaTest extends PHPUnit_Framework_TestCase
   {
     $attrs = array('foo' => 'bar', 'pathOriginal' => 'invalid');
     $res = $this->media->setMediaSpecificAttributes($attrs, $this->video);
-    $this->assertTrue($res['extraVideo']['isVideo'], $res);
-  }
-
-  public function testSetMediaSpecificAttributesForVideoWithExisting()
-  {
-    $attrs = array('foo' => 'bar', 'pathOriginal' => 'invalid', 'videoSources' => array('one','two'));
-    $res = $this->media->setMediaSpecificAttributes($attrs, $this->video);
-    $this->assertTrue($res['extraVideo']['isVideo'], $res);
-    $this->assertEquals('one', $res['extraVideo']['videoSources'][0], $res);
-    $this->assertEquals('two', $res['extraVideo']['videoSources'][1], $res);
+    $this->assertTrue($res['video'], $res);
   }
 
   public function testWhitelistAttributes()
