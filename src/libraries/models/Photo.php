@@ -629,7 +629,7 @@ class Photo extends Media
       }
 
       // update photo paths / hash
-      $updPathsResp = $this->db->postPhoto($id, $attributes);
+      $updPathsResp = $this->update($id, $attributes);
 
       unlink($localFile);
       unlink($resp['localFileCopy']);

@@ -157,7 +157,7 @@ class AwsTranscoderPlugin extends PluginBase
 
         $params = array(
           'skipOriginal' => '1',
-          'photo' => str_replace('{count}', '00001', sprintf('http://opmeshared.s3.amazonaws.com/%s.png', $output->thumbnailPattern)),
+          'photo' => str_replace('{count}', '00001', sprintf('http://opmeshared.s3.amazonaws.com/%s.jpg', $output->thumbnailPattern)),
           'videoStatus' => 'completed',
           'videoSource' => sprintf('http://opmeshared.s3.amazonaws.com/%s', $output->key)
         );
