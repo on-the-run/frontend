@@ -217,7 +217,7 @@ var Gallery = (function($) {
 		overflow.css("overflow", "hidden");
     if(typeof(item.video) !== 'undefined') {
       overflow.addClass("video");
-      overflow.append('<div class="video-element is-splash" style="height:'+configuration.thumbnailHeight+'px; background:url(\''+item[pathKey]+'\') 100%;" id="video-element-'+item.id+'"/>');
+      overflow.append('<div class="video-element video-element-'+item.id+' is-splash" style="height:'+configuration.thumbnailHeight+'px; background:url(\''+item[pathKey]+'\') 100%;"/>');
       videoQueue[item.id] = {
         id: item.id,
         //file:'http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4',

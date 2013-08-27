@@ -142,10 +142,12 @@
       (new op.data.view.ProfilePhoto({model:op.data.store.Profiles.get(viewerId), el: $('.profile-photo-header-meta')})).render();
     };
     this.rotate = function(response) {
-      var model = this.model, id = this.id, size = this.size, code = response.code, src = response.result['path'+size], $img = $('img.photo-img-'+id);
-      model.fetch();
+      var id = this.id, size = this.size, model = op.data.store.Photos.get(id), code = response.code, src = response.result['path'+size], $img = $('img.photo-img-'+id);
+      console.log(model.get('pathBase'));
+      model.attributes['path'+size] = src; // http://stackoverflow.com/a/9828922
+      console.log(model.get('pathBase'));
       if(response.code === 200) {
-        $img.fadeOut('fast', function() { $img.attr('src', src).fadeIn('fast'); });
+        $img.fadeOut('fast', function() { $img.attr('src', src).on('load', function(){ $img.fadeIn('fast'); }) });
       }
     };
     this.selectAll = function(i, el) {

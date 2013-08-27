@@ -88,7 +88,7 @@
     <div class="header">
       <div class="container">
         <div class="logo"></div>
-        <a class="detail-link" href="">Full Details</a>
+        <a class="detail-link" href="">Detail View</a> <a href="#" class="detail-link close-link" title="Pressing ESC also closes this lightbox"><i class="icon-remove"></i></a>
       </div>
     </div>
     <div class="bd">
@@ -97,14 +97,12 @@
           <a href="" class="prev"><i class="icon-angle-left"></i></a>
           <a href="" class="next"><i class="icon-angle-right"></i></a>
         </div>
+        <div class="video hide"></div>
+        <img>
       </div>
       <div class="details">
-        <div class="toggle">
-          <!--<span class="special-key">D</span>-->
-          <span class="hide-details">Hide Details</span>
-          <span class="show-details">Show Details</span>
-        </div>
-        <div class="container">
+        <div class="container"><i class="icon-info-sign info toggler" data-target=".op-lightbox .details .container .detail-block"></i></div>
+        <div class="container template">
         
         </div>
       </div>
@@ -124,10 +122,11 @@
       <span class="actions">
         <?php if($isAdmin) { ?>
           <a href="#" class="tags edit" title="Edit Tags"><i class="icon-tags"></i><span class="hide"><%- tags %></span></a>
-          <a href="#" class="share" data-id="<%= id %>" title="Share this photo via email, Facebook or Twitter"><i class="icon-share-alt"></i></a>
-          <a href="<%= pathDownload %>" title="Download the original high resolution photo"><i class="icon-download"></i></a>
           <a href="#" class="permission edit" title="Click to make this photo <%= permission == 0 ? 'public' : 'private' %>"><i class="icon-<%= permission == 0 ? 'lock' : 'unlock' %>"></i></a>
           <a href="#" class="rotate" title="Click to rotate this photo"><i class="icon-rotate-right"></i></a>
+          <span class="separator"></span>
+          <a href="<%= pathDownload %>" title="Download the original high resolution photo"><i class="icon-download"></i></a>
+          <a href="#" class="share" data-id="<%= id %>" title="Share this photo via email, Facebook or Twitter"><i class="icon-share-alt"></i></a>
         <?php } else { ?>
           <?php if($this->config->site->allowOriginalDownload == 1) { ?>
             <a href="<%= pathDownload %>" title="Download the original high resolution photo"><i class="icon-download"></i></a>
@@ -177,12 +176,14 @@
 
 <script type="tmpl/underscore" id="photo-detail-meta">
   <h1 class="photo-title"></h1>
-  
   <div class="row">
     <div class="span9">
       <div class="photo">
         <img src="<%= path870x870 %>" class="photo-img-<%= id %>" />
         <span class="mag photo-view-modal-click" data-id="<%= id %>"><i class="icon-search"></i></span>
+      </div>
+      <div class="video hide">
+        <div class="video-element is-splash" style="height:<%= photo870x870[2] %>px; background:url(<%= path870x870 %>) 100%;" id="video-element-<%= id %>"/>
       </div>
       <div class="description"></div>
       <!--<div class="comments"></div>-->

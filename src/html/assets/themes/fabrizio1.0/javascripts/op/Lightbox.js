@@ -63,7 +63,7 @@
     rotate: function(ev) {
       ev.preventDefault();
       var $el = $(ev.currentTarget), model = this.model, id = model.get('id'), size = 'Base', value='90';
-      OP.Util.makeRequest('/photo/'+id+'/transform.json', {crumb: TBX.crumb(),rotate:value,generate:'true'}, TBX.callbacks.rotate.bind({model: model, id: id, size: size}), 'json', 'post');
+      OP.Util.makeRequest('/photo/'+id+'/transform.json', {crumb: TBX.crumb(),rotate:value,generate:'true'}, TBX.callbacks.rotate.bind({id: id, size: size}), 'json', 'post');
     },
     share: function(ev) {
       ev.preventDefault();
@@ -133,14 +133,15 @@
         .hide()
         .fadeIn('fast')
         
-      this.detailView = new DetailView({el: this.$el.find('.details .container')} );
+      this.detailView = new DetailView({el: this.$el.find('.details .container.template')} );
     },
     
     _initEvents : function(){
       this.$el.click( this._bound('onContainerClick') );
-      this.$el.find('.photo .nav .prev').click( this._bound('prev'));
+      this.$el.find('.header .container .close-link').click( this._bound('hide'));
       this.$el.find('.photo .nav .next').click( this._bound('next'));
-      this.$el.find('.details .toggle').click( this._bound('toggleDetails'));
+      this.$el.find('.photo .nav .prev').click( this._bound('prev'));
+      this.$el.find('.details .toggler').click( this._bound('toggleDetails'));
     },
     
     _captureDocumentEvents : function(){
@@ -230,14 +231,33 @@
       this.loadImage();
       return this;
     },
+
+    videoParams: function() {
+      var videoParams = {
+        id: this.model.get('id'),
+        file: this.model.get('videoSource'),
+        image: this.model.get(this.imagePathKey),
+        title: this.model.get('name')
+      };
+      return videoParams;
+    },
 	
     setModel : function(model){
       this.model = model;
       this.trigger('updatemodel', model);
       this.detailView.setModel( model );
       this.loadImage();
-      //this.$el.find('.header .detail-link').attr('href', model.get('url'));
       this._preloadNextPrevious(model);
+    },
+
+    showPhoto: function() {
+      this.$el.find('.photo>.video').css('display', 'none');
+      this.$el.find('.photo>img').css('display', 'block');
+    },
+
+    showVideo: function() {
+      this.$el.find('.photo>img').css('display', 'none');
+      this.$el.find('.photo>.video').css('display', 'block');
     },
 	
     _imageLoaded : function(id){
@@ -246,7 +266,16 @@
       if( this.model.get('id') != id ) return;
       this.$el.removeClass('loading');
       this.$el.find('.photo img').remove();
-      $('<img />').attr('class', 'photo-img-'+id).attr('src', $(c).attr('src')).hide().appendTo(this.$el.find('.photo')).fadeIn('fast');
+      if(typeof(this.model.get('video')) === 'undefined'  || this.model.get('video') !== true) {
+        this.showPhoto();
+        $('<img />').attr('class', 'photo-img-'+id).attr('src', $(c).attr('src')).hide().appendTo(this.$el.find('.photo')).fadeIn('fast');
+      } else {
+        $videoEl = this.$el.find('.photo .video');
+        this.showVideo();
+        $videoEl.css('height', this.model.get('photo870x870')[2]).css('background', 'url("'+this.model.get('path870x870')+'") no-repeat 100%').addClass('video-element-'+this.model.get('id'));
+        //$videoEl.css('height', this.model.get('photo870x870')[2]).css('background', 'url("'+this.model.get('path870x870')+'") 100%').attr('id','video-element-'+this.model.get('id'));
+        OP.Util.fire('video:load', this.videoParams());
+      }
       this.adjustSize();
     },
 
@@ -268,17 +297,18 @@
     },
     
     loadImage : function(){
-      var c;
+      var c, src = this.model.get(this.imagePathKey);
       this.$el.find('.photo img').remove();
       this.$el.addClass('loading');
       this.$el.find('.photo')
         .width($(window).width())
         .height(($(window).height() - this.$el.find('.bd').position().top )+'px');
         
-      if( !(c = this.cache[this.model.get('id')]) ){
+      // check if the image is not cached || if the imagePathKey is the same
+      if( !(c = this.cache[this.model.get('id')]) || ($(c).attr('src') !== src) ){
         var c = this.cache[this.model.get('id')] = new Image();
         c.onload = _.bind(this._imageLoaded, this, this.model.get('id'));
-        c.src = this.model.get(this.imagePathKey);
+        c.src = src;
         c._loaded = true;
       }
       else if( c._loaded ){
@@ -344,8 +374,9 @@
       return this;
     },
 
-    toggleDetails : function(){
-      this.$el.toggleClass('details-hidden');
+    toggleDetails : function(ev){
+      var $el = $(ev.target), $details = $el.closest('.details'), $template = $('.template', $details), $block = $('.detail-block', $template);
+      $block.toggle('fast', function() { $template.toggleClass('hide'); });
     },
 
     open: function(arg) {

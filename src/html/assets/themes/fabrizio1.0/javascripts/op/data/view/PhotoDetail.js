@@ -96,7 +96,7 @@
     rotate: function(ev) {
       ev.preventDefault();
       var $el = $(ev.currentTarget), model = this.model, id = model.get('id'), size = '870x870', value='90';
-      OP.Util.makeRequest('/photo/'+id+'/transform.json', {crumb: TBX.crumb(),rotate:value,returnSizes:size,generate:'true'}, TBX.callbacks.rotate.bind({model: model, id: id, size: size}), 'json', 'post');
+      OP.Util.makeRequest('/photo/'+id+'/transform.json', {crumb: TBX.crumb(),rotate:value,returnSizes:size,generate:'true'}, TBX.callbacks.rotate.bind({id: id, size: size}), 'json', 'post');
     },
     share: function(ev) {
       ev.preventDefault();
@@ -197,6 +197,10 @@
       $(this.el).find('.photo .mag').click(function(e){
         op.Lightbox.getInstance().open(self.model.get('id'));
       });
+      if(typeof(this.initialModel.get('video')) !== 'undefined' && this.initialModel.get('video') === true) {
+        OP.Util.fire('video:load', this.videoParams());
+        this.showVideo();
+      }
     },
     
     updateModel : function(model){
@@ -204,12 +208,20 @@
       this.model = model;
       this.model.on('change', this.updateViews, this);
       this.updateViews();
-      // change the main image
-      $(this.el).find('.photo img')
-        .attr('src', this.model.get(this.largePath))
+      // change the main image or video
+      if(typeof(this.model.get('video')) === 'undefined' || this.model.get('video') !== true) {
+        this.showPhoto();
+        $(this.el).find('.photo img')
+          .attr('src', this.model.get(this.largePath));
 
-      $(this.el).find('.photo .photo-view-modal-click')
-        .attr('data-id', this.model.get('id'))
+        $(this.el).find('.photo .photo-view-modal-click')
+          .attr('data-id', this.model.get('id'));
+      } else {
+        this.showVideo();
+        var $videoEl = $(this.el).find('.video .video-element');
+        $videoEl.css('height', this.model.get('photo870x870')[2]).css('background', 'url('+this.model.get('path870x870')+') 100%').addClass('video-element-'+this.model.get('id'));
+        OP.Util.fire('video:load', this.videoParams());
+      }
     },
     
     updateViews : function(){
@@ -242,6 +254,18 @@
         new op.data.view.UserBadge({el: $el, model: model}).render();
       }
     },
+
+    videoParams: function() {
+      var videoParams = {
+        id: this.model.get('id'),
+        file: this.model.get('videoSource'),
+        image: this.model.get('path870x870'),
+        width: this.model.get('photo870x870')[1],
+        height: this.model.get('photo870x870')[2],
+        title: this.model.get('name')
+      };
+      return videoParams;
+    },
     
     setupPagination : function(){
       var $scroller = $(this.el).find('.pagination .photos .scroller')
@@ -262,6 +286,16 @@
       this.addModel(this.model);
       this.addPreviousFromModel(this.model);
       this.addNextFromModel(this.model);
+    },
+
+    showPhoto: function() {
+      $(this.el).find('.video').hide();
+      $(this.el).find('.photo').show();
+    },
+
+    showVideo: function() {
+      $(this.el).find('.photo').hide();
+      $(this.el).find('.video').show();
     },
     
     addPreviousFromModel : function(model){

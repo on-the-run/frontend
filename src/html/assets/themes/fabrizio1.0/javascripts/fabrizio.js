@@ -192,6 +192,7 @@
         // escape cancels flyout
         OP.Util.on('keyup:escape', TBX.handlers.click.batchHide);
         OP.Util.on('keyup:slash', TBX.callbacks.showKeyboardShortcuts);
+        OP.Util.on('video:load', TBX.handlers.custom.videoLoad);
 
         if(location.pathname === '/') {
           TBX.init.pages.front.init();
@@ -336,8 +337,6 @@
           running: false,
           init: function() {
             var options, _pages = TBX.init.pages, _this = _pages.photos, batchModel = _pages.photos.batchModel, $batchEl = $('.batch-meta');
-
-            OP.Util.on('video:load', TBX.handlers.custom.videoLoad);
 
             $(window).scroll(function() { util.scrollCb(_this); });
             _this.load();

@@ -11,8 +11,11 @@
     };
 
     this.load = function(id, params) {
-      var player, elementId = 'video-element-'+id, $metaEl = $('#'+elementId).closest('.imageContainer').find('.photo-meta');
-      var $el = $('#'+elementId);
+      var player, elementId = 'video-element-'+id, $lightbox = $('.op-lightbox'), $el;
+      if($lightbox.length > 0)
+        $el = $('.'+elementId, $lightbox);
+      else
+        $el = $('body>.container').find('.'+elementId);
 
       $el.flowplayer({
         engine:'html5',
