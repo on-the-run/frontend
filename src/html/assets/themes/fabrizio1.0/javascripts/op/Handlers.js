@@ -327,19 +327,19 @@
         params[key][albumId] = values;
         params[key] = JSON.stringify(params[key]);
       } else if(key === 'album-add') {
-        var albumId = $('select[name="albums"]', $form).attr('value'), groupAlbums = __initData.album || {} /* convert null to object */, albumAddObj;
+        var albumId = $('select[name="albums"]', $form).attr('value'), groupAlbums = __initData.album || {} /* convert null to object */, albumAddObj = values;
         if(albumId.length === 0) {
           TBX.notification.show('Please select an album to add to this group.', null, 'error');
           OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-warning-sign'});
           return;
         }
+        albumAddObj.C = true;
+        albumAddObj.R = true;
         params['album'] = groupAlbums;
-        params['album'][albumId] = values;
+        params['album'][albumId] = albumAddObj;
         params['album'] = JSON.stringify(params['album']);
         callback = function() { 
-          $('.checkboxes .inner input[type="checkbox"]', $form).attr('checked',false);
-          TBX.notification.show('Your album was added to this group. <a href="">Refresh</a> this page to see it.', null, 'confirm'); 
-          OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-ok'});
+          window.location.reload();
         };
       } else if(key === 'album-remove') {
         var albumId = $('input[name="albumId"]', $form).attr('value'), groupAlbums;

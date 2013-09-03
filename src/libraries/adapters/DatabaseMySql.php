@@ -420,10 +420,9 @@ class DatabaseMySql implements DatabaseInterface
     }
     elseif(!empty($email))
     {
-      $groups = $this->getGroups($email); // case to array to handle false/null
+      $groups = $this->getGroups($email); // cast to array to handle false/null
       $albumIds = $this->getAlbumsFromGroups($groups);
 
-      //$albumIds = array_keys($groups);
       $inClause = '';
       if(!empty($albumIds))
         $inClause = sprintf("`id` IN ('%s') OR ", implode("','", $albumIds));

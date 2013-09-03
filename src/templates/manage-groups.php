@@ -109,7 +109,7 @@
  
           <h3>Albums <small><a href="#" class="toggle" data-target="form.groupAlbumAdd">Add albums</a></small></h3>
           <p class="blurb">
-            <i class="icon-info-sign"></i> Each group has a list of albums with specific permissions.
+            <i class="icon-info-sign"></i> Members of this group can upload into the albums below.
           </p>
           <div class="row album-header">
             <div class="span10">
@@ -122,7 +122,9 @@
                     <?php } ?>
                   <?php } ?>
                 </select>
-                <span class="checkboxes">
+                <input type="hidden" name="R" value="1">
+                <input type="hidden" name="C" value="1">
+                <!--<span class="checkboxes">
                   <span class="inner">
                     <label class="checkbox inline">
                       <input type="checkbox" name="R" value="1">
@@ -137,7 +139,7 @@
                       Remove
                     </label>
                   </span>
-                </span>
+                </span>-->
                 <button class="btn btn-brand addSpinner">Add album</button> <span class="inline-help light"><em>or <a href="#" class="showBatchForm album">create</a> an album</em></span>
                 <input type="hidden" name="httpCodes" value="*">
                 <input type="hidden" name="crumb" value="<?php $this->utility->safe($crumb); ?>">
@@ -160,7 +162,7 @@
               </div>
               <div class="span2" data-album="<?php $this->utility->safe($albumId); ?>">
                 <h4 class="name"><?php $this->utility->safe($allAlbums[$albumId]['name']); ?> hello world</h4>
-                <form action="/group/<?php $this->utility->safe($group['id']); ?>/update" class="groupUpdateHash">
+                <!--<form action="/group/<?php $this->utility->safe($group['id']); ?>/update" class="groupUpdateHash">
                   <div class="controls">
                     <label class="checkbox inline">
                       <input type="checkbox" name="R" value="1" <?php if($group['album'] === true || (isset($group['album'][$albumId]['R']) && $group['album'][$albumId]['R'] === true)) { ?>checked="checked"<?php } ?>>
@@ -170,7 +172,7 @@
                   <div class="controls">
                     <label class="checkbox inline">
                       <input type="checkbox" name="C" value="1" <?php if($group['album'] === true || (isset($group['album'][$albumId]['C']) && $group['album'][$albumId]['C'] === true)) { ?>checked="checked"<?php } ?>>
-                      Add photos
+                      Upload photos
                     </label>
                   </div>
                   <div class="controls">
@@ -183,7 +185,7 @@
                   <input type="hidden" name="crumb" value="<?php $this->utility->safe($crumb); ?>">
                   <input type="hidden" name="key" value="album">
                   <input type="hidden" name="albumId" value="<?php $this->utility->safe($albumId); ?>">
-                </form>
+                </form>-->
                 <form action="/group/<?php $this->utility->safe($group['id']); ?>/update" class="form-inline groupUpdateHash">
                   <small class="light">You can <a href="<?php $this->url->albumView($albumId); ?>">view</a> or <button class="btn-link">remove</button> this album</small>
                   <input type="hidden" name="crumb" value="<?php $this->utility->safe($crumb); ?>">
