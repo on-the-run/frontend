@@ -30,7 +30,6 @@ class Permission extends BaseModel
       return true;
 
     $permissions = $this->get();
-
     // first check if there are ANY upload permissions, if not then return false
     if(!is_array($permissions[self::create]))
       return false;

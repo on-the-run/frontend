@@ -44,18 +44,6 @@
   <hr>
 <?php } ?>
 
-<?php if(count($duplicatePhotos) > 0) { ?>
-  <strong><span class="label label-warning"><?php echo count($duplicatePhotos); ?> of them already existed in your account.</span></strong>
-  <div class="upload-preview">
-    <ul class="thumbnails duplicates">
-      <?php foreach($duplicatePhotos as $photo) { ?>
-        <li><a href="<?php $this->utility->safe($photo['url']); ?>" class="thumbnail"><img src="<?php $this->utility->safe($photo[$this->config->photoSizes->thumbnail]); ?>"></a></li>
-      <?php } ?>
-    </ul>
-  </div>
-  <hr>
-<?php } ?>
-
 <?php if(count($failure) > 0) { ?>
   <strong><span class="label label-important"><?php printf('%d %s', count($failure), $this->utility->plural(count($failure), 'photo', false)); ?> could not be uploaded. Booo!</span></strong>
   <div>

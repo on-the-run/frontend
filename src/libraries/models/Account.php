@@ -18,6 +18,7 @@ class Account extends BaseModel
     $res = $this->db->putUser(array('id' => $email));
     if($sendEmail)
       $this->sendEmailCreated($email);
+    return $res;
   }
 
   public function emailExists($email)

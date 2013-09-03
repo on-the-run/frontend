@@ -196,7 +196,7 @@ class AuthenticationTest extends PHPUnit_Framework_TestCase
     $permission = $this->getMock('Permission', array('getCollapsed'));
     $permission->expects($this->any())
       ->method('getCollapsed')
-      ->will($this->returnValue(array('C')));
+      ->will($this->returnValue(array('R')));
     $this->authentication->inject('permission', $permission);
     $this->authentication->requireAuthentication();
   }
@@ -227,6 +227,68 @@ class AuthenticationTest extends PHPUnit_Framework_TestCase
       ->will($this->returnValue(array()));
     $this->authentication->inject('permission', $permission);
     $this->authentication->requireAuthentication(array('C'));
+  }
+
+  public function testRequireAuthenticationIsNotOwnerValidResource()
+  {
+    $user = $this->getMock('User', array('isLoggedIn','isOwner'));
+    $user->expects($this->any())
+      ->method('isLoggedIn')
+      ->will($this->returnValue(true));
+    $user->expects($this->any())
+      ->method('isOwner')
+      ->will($this->returnValue(false));
+    $this->authentication->inject('user', $user);
+    $this->credential->expects($this->any())
+      ->method('isOAuthRequest')
+      ->will($this->returnValue(false));
+    $this->authentication->inject('user', $user);
+    $this->authentication->inject('credential', $this->credential);
+    $permission = $this->getMock('Permission', array('isLoggedIn','isOwner'));
+
+    // should thrown an exception
+    $permission = $this->getMock('Permission', array('getCollapsed','allowedAlbums'));
+    $permission->expects($this->any())
+      ->method('getCollapsed')
+      ->will($this->returnValue(array('C')));
+    $permission->expects($this->any())
+      ->method('allowedAlbums')
+      ->will($this->returnValue(array('1','2','3','a')));
+    $this->authentication->inject('permission', $permission);
+    $this->authentication->requireAuthentication(array('C'), array('a','1'));
+    // as long as an exception isn't thrown then this test is good
+  }
+
+  /**
+  * @expectedException OPAuthorizationPermissionException
+  */
+  public function testRequireAuthenticationIsNotOwnerInvalidResource()
+  {
+    $user = $this->getMock('User', array('isLoggedIn','isOwner'));
+    $user->expects($this->any())
+      ->method('isLoggedIn')
+      ->will($this->returnValue(true));
+    $user->expects($this->any())
+      ->method('isOwner')
+      ->will($this->returnValue(false));
+    $this->authentication->inject('user', $user);
+    $this->credential->expects($this->any())
+      ->method('isOAuthRequest')
+      ->will($this->returnValue(false));
+    $this->authentication->inject('user', $user);
+    $this->authentication->inject('credential', $this->credential);
+    $permission = $this->getMock('Permission', array('isLoggedIn','isOwner'));
+
+    // should thrown an exception
+    $permission = $this->getMock('Permission', array('getCollapsed','allowedAlbums'));
+    $permission->expects($this->any())
+      ->method('getCollapsed')
+      ->will($this->returnValue(array('C')));
+    $permission->expects($this->any())
+      ->method('allowedAlbums')
+      ->will($this->returnValue(array('1','2','3','a')));
+    $this->authentication->inject('permission', $permission);
+    $this->authentication->requireAuthentication(array('C'), array('b','1'));
   }
 
   public function testRequireCrumbIsOAuth()

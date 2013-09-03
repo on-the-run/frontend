@@ -406,10 +406,15 @@ class ApiPhotoController extends ApiBaseController
     */
   public function upload()
   {
-    getAuthentication()->requireAuthentication();
-    getAuthentication()->requireCrumb();
     $httpObj = new Http;
     $attributes = $_REQUEST;
+
+    $albums = array();
+    if(isset($attributes['albums']) && !empty($attributes['albums']))
+      $albums = (array)explode(',', $attributes['albums']);
+
+    getAuthentication()->requireAuthentication(array(Permission::create), $albums);
+    getAuthentication()->requireCrumb();
 
     $this->plugin->invoke('onPhotoUpload');
 
@@ -562,7 +567,7 @@ class ApiPhotoController extends ApiBaseController
       $params['facebookId'] = $fbConf['id'];
     }
 
-    if(count($params['ids']) > 0)
+    if(isset($params['ids']) && count($params['ids']) > 0)
     {
       $ids = implode(',', $params['ids']);
       $params['url'] = $this->url->photosView("ids-{$ids}", false);

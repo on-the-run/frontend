@@ -51,7 +51,7 @@ class Authentication
     *
     * @return boolean
     */
-  public function requireAuthentication($requested = array('C','R','U','D'))
+  public function requireAuthentication($actions = array(Permission::create), $resources = null)
   {
     // TODO !group enforce group permissions for oauth requests
     
@@ -71,12 +71,40 @@ class Authentication
     }
     elseif(!$this->user->isAdmin())
     {
+      // see if there's general access granted for the requested action
       $granted = $this->permission->getCollapsed();
       // sort arrays for comparison
-      sort($requested);
+      sort($actions);
       sort($granted);
-      if(array_intersect($requested, $granted) !== $requested)
-        OPException::raise(new OPAuthorizationPermissionException());
+      if(array_intersect($actions, $granted) !== $actions)
+        OPException::raise(new OPAuthorizationPermissionException('Requested action not granted'));
+
+      // if resources are specified then we check those permissions
+      if($resources !== null)
+      {
+        // at least one resource needs to be specified if not null
+        //  null means to skip the resource check
+        if(empty($resources))
+        {
+          getLogger()->warn('An empty list of resources were passed in for permission (not allowed)');
+          OPException::raise(new OPAuthorizationPermissionException());
+        }
+
+        $resources = (array)$resources;
+        // only permission supported right now is create
+        if(in_array(Permission::create, $actions))
+        {
+          $allowedResources = $this->permission->allowedAlbums();
+          foreach($resources as $resource)
+          {
+            if(!in_array($resource, $allowedResources))
+            {
+              getLogger()->warn(sprintf('Could not grant user access to resource %s', $resource));
+              OPException::raise(new OPAuthorizationPermissionException());
+            }
+          }
+        }
+      }
     }
   }
 

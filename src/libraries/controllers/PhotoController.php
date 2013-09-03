@@ -210,10 +210,9 @@ class PhotoController extends BaseController
     $this->theme->setTheme(); // defaults
     $crumb = $this->session->get('crumb');
     $template = sprintf('%s/upload.php', $this->config->paths->templates);
-    //$groupsResp = $this->api->invoke('/groups/list.json');
     $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0', 'permission' => Permission::create)));
     $preferences = array('permission' => $userObj->getAttribute('stickyPermission'));
-    $body = $this->template->get($template, array('crumb' => $crumb, 'groups' => $groupsResp['result'], 'albums' => $albumsResp['result'], 'licenses' => $this->utility->getLicenses($userObj->getAttribute('stickyLicense')), 'preferences' => $preferences));
+    $body = $this->template->get($template, array('crumb' => $crumb, 'albums' => $albumsResp['result'], 'licenses' => $this->utility->getLicenses($userObj->getAttribute('stickyLicense')), 'preferences' => $preferences));
     $this->theme->display('template.php', array('body' => $body, 'page' => 'upload'));
   }
 
@@ -235,10 +234,9 @@ class PhotoController extends BaseController
     $this->theme->setTheme(); // defaults
     $crumb = $this->session->get('crumb');
     $template = sprintf('%s/upload-beta.php', $this->config->paths->templates);
-    //$groupsResp = $this->api->invoke('/groups/list.json');
     $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0', 'permission' => Permission::create)));
     $preferences = array('permission' => $userObj->getAttribute('stickyPermission'));
-    $body = $this->template->get($template, array('crumb' => $crumb, 'groups' => $groupsResp['result'], 'albums' => $albumsResp['result'], 'licenses' => $this->utility->getLicenses($userObj->getAttribute('stickyLicense')), 'preferences' => $preferences));
+    $body = $this->template->get($template, array('crumb' => $crumb, 'albums' => $albumsResp['result'], 'licenses' => $this->utility->getLicenses($userObj->getAttribute('stickyLicense')), 'preferences' => $preferences));
     $this->theme->display('template.php', array('body' => $body, 'page' => 'upload'));
   }
 

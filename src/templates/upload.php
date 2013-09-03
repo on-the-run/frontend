@@ -26,7 +26,7 @@
         <div class="control-group">
           <label class="control-label">Albums <small>(<a href="#" class="showBatchForm album" data-action="albums">create new</a>)</small></label>
           <select data-placeholder="Select albums for these photos" name="albums" class="typeahead">
-            <option value="">If you'd like, choose an album</option>
+            <?php if($this->user->isAdmin()) { ?><option value="">If you'd like, choose an album</option><?php } ?>
             <?php foreach($albums as $album) { ?>
               <option value="<?php $this->utility->safe($album['id']); ?>"><?php $this->utility->safe($album['name']); ?></option>
             <?php } ?>
