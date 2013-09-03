@@ -185,6 +185,13 @@
       $icon.removeClass('icon-spinner icon-spin');
       $icon.addClass(cls);
     };
+    this.rotate = function(response) {
+      var model = this.model, id = this.id, size = this.size, code = response.code, src = response.result['path'+size], $img = $('img.photo-img-'+id);
+      model.fetch();
+      if(response.code === 200) {
+        $img.fadeOut('fast', function() { $img.attr('src', src).fadeIn('fast'); });
+      }
+    };
     this.selectAll = function(i, el) {
       var id = $(el).attr('data-id'), photo = op.data.store.Photos.get(id).toJSON();
       OP.Batch.add(id, photo);

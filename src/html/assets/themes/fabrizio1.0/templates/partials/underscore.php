@@ -2,11 +2,11 @@
 <script type="tmpl/underscore" id="photo-meta">
   <div class="photo-meta">
     <?php if($isAdmin) { ?>
-      <h4 class="title edit"><a href="/p/<%= id %>" title="Update the title"><i class="icon-pencil"></i> <%- title || filenameOriginal %></a></h4>
+      <h4 class="title edit"><a href="/p/<%= id %>" title="Update the title"><i class="icon-pencil"></i><%- title || filenameOriginal %></a></h4>
       <ul class="info">
         <!--<li><a href="#" title="Comments"><i class="icon-comments"></i> <span class="number">24</span></li>
         <li><a href="#" title="Favorites"><i class="icon-heart"></i> <span class="number">24</span></li>-->
-        <li><a href="#" class="share" title="Share via Facebook, Twitter or Email" data-id="<%= id %>"><i class="icon-share-alt"></i> Share</a> &nbsp;</li>
+        <li><a href="#" class="share" title="Share via Facebook, Twitter or Email" data-id="<%= id %>"><i class="icon-share-alt"></i>Share</a> &nbsp;</li>
         <li class="pull-right"><a href="#" title="Delete this photo"><i class="icon-trash photo delete edit" data-action="delete" data-ids="<%= id %>"></i></a></li>
         <li class="pull-right"><a href="#" title="Select for batch editing"><i class="icon-pushpin pin edit" data-id="<%= id %>"></i></a></li>
         <li class="pull-right album"><a href="#" title="Set as your album cover"><i class="icon-th-large album edit" data-id="<%= id %>"></i></a></li>
@@ -123,7 +123,7 @@
     <div class="title">
       <span class="text">
         <?php if($isAdmin) { ?>
-          <a href="#" class="title edit text"><i class="icon-pencil"></i> <%- title || filenameOriginal %></a>
+          <a href="#" class="title edit text"><i class="icon-pencil"></i><%- title || filenameOriginal %></a>
         <?php } else { ?>
           <%- title || filenameOriginal %>
         <?php } ?>
@@ -134,6 +134,7 @@
           <a href="#" class="share" data-id="<%= id %>" title="Share this photo via email, Facebook or Twitter"><i class="icon-share-alt"></i></a>
           <a href="<%= pathDownload %>" title="Download the original high resolution photo"><i class="icon-download"></i></a>
           <a href="#" class="permission edit" title="Click to make this photo <%= permission == 0 ? 'public' : 'private' %>"><i class="icon-<%= permission == 0 ? 'lock' : 'unlock' %>"></i></a>
+          <a href="#" class="rotate" title="Click to rotate this photo"><i class="icon-rotate-right"></i></a>
         <?php } else { ?>
           <?php if($this->config->site->allowOriginalDownload == 1) { ?>
             <a href="<%= pathDownload %>" title="Download the original high resolution photo"><i class="icon-download"></i></a>
@@ -168,9 +169,9 @@
     <?php if($isAdmin) { ?>
       <h5>
         <span>
-          <span class="name edit" title="<%- name %>"><i class="icon-pencil"></i> <%- name %></span>
+          <span class="name edit" title="<%- name %>"><i class="icon-pencil"></i><%- name %></span>
           <div class="icons">
-            <a href="#" class="share" data-id="<%= id %>" title="Share this album"><i class="icon-share"></i> Share</a>
+            <a href="#" class="share" data-id="<%= id %>" title="Share this album"><i class="icon-share"></i>Share</a>
             <a href="#" class="delete pull-right" data-id="<%= id %>" title="Delete this album"><i class="icon-trash"></i></a>
           </div>
         </span>
@@ -187,7 +188,7 @@
   <div class="row">
     <div class="span9">
       <div class="photo">
-        <img src="<%= path870x870 %>"  />
+        <img src="<%= path870x870 %>" class="photo-img-<%= id %>" />
         <span class="mag photo-view-modal-click" data-id="<%= id %>"><i class="icon-search"></i></span>
       </div>
       <div class="description"></div>
@@ -229,7 +230,7 @@
 
 <script type="tmpl/underscore" id="photo-detail-title-tmpl">
   <?php if($isAdmin) { ?>
-    <span class="title edit"><i class="icon-pencil"></i> <%- title || filenameOriginal %></span>
+    <span class="title edit"><i class="icon-pencil"></i><%- title || filenameOriginal %></span>
   <?php } else { ?>
     <span class="title"><%- title || filenameOriginal %></span>
   <?php } ?>
@@ -280,10 +281,12 @@
 
 <script type="tmpl/underscore" id="photo-detail-meta-tmpl">
   <ul>
-    <!--<li><i class="icon-heart"></i> 16 Favorites</i></li>-->
-    <!--<li><i class="icon-comment"></i> 7 Comments</i></li>-->
-    <!--<li><i class="icon-eye-open"></i> 110 Views</i></li>-->
-    <li><i class="icon-calendar"></i> <%= phpjs.date('M d, Y', dateTaken) %></i></li>
+    <?php if($isAdmin) { ?>
+      <li class="full"><i class="icon-calendar"></i> <%= phpjs.date('l, F jS, Y @ g:ia', dateTaken) %></i></li>
+    <?php } else { ?>
+      <li><i class="icon-calendar"></i> <%= phpjs.date('M d, Y', dateTaken) %></i></li>
+    <?php } ?>
+
     <?php if($isAdmin) { ?>
       <li><a href="#" class="share trigger" data-id="<%= id %>"><i class="icon-share-alt"></i> Share</i></a></li>
     <?php } ?>
@@ -291,7 +294,9 @@
     <?php if($isAdmin || $this->config->site->allowOriginalDownload == 1) { ?>
       <li><a href="<%= pathDownload %>" class="download trigger"><i class="icon-download"></i> Download</i></a></li>
     <?php } ?>
-    
+    <?php if($isAdmin) { ?>
+      <li><a class="rotate" href="#"><i class="icon-rotate-right"></i> Rotate</a></li>
+    <?php } ?>
   </ul>
 </script>
 
