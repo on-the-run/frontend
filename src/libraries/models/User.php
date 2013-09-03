@@ -46,6 +46,19 @@ class User extends BaseModel
     return sha1(sprintf('%s-%s', $password, $this->config->secrets->passwordSalt));
   }
 
+  public function generatePasswordRequestToken()
+  {
+    $token = md5(rand(10000,100000));
+    $this->setAttribute('passwordToken', $token);
+    return $token;
+  }
+
+  public function generatePasswordRequestUrl()
+  {
+    $utility = new Utility;
+    return sprintf('%s://%s/manage/password/reset/%s', $utility->getProtocol(false), $utility->getHost(), $this->generatePasswordRequestToken());
+  }
+
   /**
     * Gets an attribute from the user's entry in the user db
     * @param string $name The name of the value to retrieve
