@@ -46,10 +46,17 @@ class Authentication
   }
 
   /**
-    * Requires authentication as a viewer or owner.
-    * Throws exception on failure.
+    * This method handles authentication requirements
+    *  At its simplest it checks if a request has malformed oauth parameters
+    *  Then it validates that at least one action was passed in because
+    *   we only grant unrestricted access to admins (read on for how they are allowed through)
+    *  If the user is logged in (via oauth or cookies) and they're not an admin we perform
+    *   additional checks. If they *are* an admin then we proceed without throwing an exception
     *
-    * @return boolean
+    * @param $actions An array of actions including Permission::create, Permission::read, Permission::update and Permission::delete
+    * @param $resources A list of resources (album IDs) for which the $actions have been granted
+    *
+    * @throws OPAuthorization*Exception
     */
   public function requireAuthentication($actions = array(), $resources = null)
   {
@@ -76,13 +83,27 @@ class Authentication
     }
     elseif(!$this->user->isAdmin())
     {
+      // since this user isn't an admin they're untrusted
+      //  in this scenario we require at least one action to be specified
+      if(empty($actions))
+      {
+        getLogger()->warn('At least one action needs to be passed in');
+        OPException::raise(new OPAuthorizationPermissionException('No action passed in to requireAuthentication'));
+      }
+
+      // now to check permissions against the actions
       // see if there's general access granted for the requested action
-      $granted = $this->permission->getCollapsed();
       // sort arrays for comparison
+      $granted = $this->permission->getCollapsed();
       sort($actions);
       sort($granted);
+
+      // check that the intersection of the actions requested and granted equal requested (think ot bitwise AND)
       if(array_intersect($actions, $granted) !== $actions)
+      {
+        getLogger()->warn('Actions requested do not match collapsed permissions for user');
         OPException::raise(new OPAuthorizationPermissionException('Requested action not granted'));
+      }
 
       // if resources are specified then we check those permissions
       if($resources !== null)
