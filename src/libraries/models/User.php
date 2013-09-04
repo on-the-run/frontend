@@ -46,17 +46,22 @@ class User extends BaseModel
     return sha1(sprintf('%s-%s', $password, $this->config->secrets->passwordSalt));
   }
 
-  public function generatePasswordRequestToken()
+  public function generatePasswordResetToken()
   {
     $token = md5(rand(10000,100000));
     $this->setAttribute('passwordToken', $token);
     return $token;
   }
 
-  public function generatePasswordRequestUrl()
+  public function generatePasswordResetUrl()
   {
     $utility = new Utility;
-    return sprintf('%s://%s/manage/password/reset/%s', $utility->getProtocol(false), $utility->getHost(), $this->generatePasswordRequestToken());
+    $userParams = $this->getUserRecord();
+    $emailParts = explode('@', $userParams['id']);
+    // TODO figure out why we have to double encode
+    $email = sprintf('%s@%s', urlencode(urlencode($emailParts[0])), urlencode(urlencode($emailParts[1])));
+
+    return sprintf('%s://%s/manage/password/reset/%s', $utility->getProtocol(false), $utility->getHost(), $this->generatePasswordResetToken());
   }
 
   /**
@@ -281,7 +286,6 @@ class User extends BaseModel
 
     $user = $this->config->user;
     $credential = $this->getCredentialObject();
-    $loggedInEmail = $this->session->get('email');
     if($credential->isOAuthRequest())
     {
       return $credential->checkRequest() === true && $credential->getEmailFromOAuth() === $user->email;;
@@ -294,6 +298,7 @@ class User extends BaseModel
     {
       if($user === null)
         return false;
+      $loggedInEmail = $this->session->get('email');
       $len = max(strlen($loggedInEmail), strlen($user->email));
       $isOwner = isset($user->email) && strncmp(strtolower($loggedInEmail), strtolower($user->email), $len) === 0;
       if($isOwner)

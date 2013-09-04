@@ -321,6 +321,39 @@ class UserTest extends PHPUnit_Framework_TestCase
     $this->assertEquals('1', $res);
   }
 
+  /**
+  * @expectedException PHPUnit_Framework_ExpectationFailedException
+  */
+  public function testGetUserRecordForNonOwnerFailure()
+  {
+    $this->user = new User('nonowner@example.com');
+    $db = $this->getMock('Db', array('getUser'));
+    $db->expects($this->any())
+      ->method('getUser')
+      ->with($this->equalTo(null)) // this does not match the set email
+      ->will($this->returnValue('NULL'));
+    $this->user->inject('db', $db);
+
+    $this->user->clearUserCache();
+    $res = $this->user->getUserRecord();
+    $this->assertEquals('PASS', $res);
+  }
+
+  public function testGetUserRecordForNonOwner()
+  {
+    $this->user = new User('nonowner@example.com');
+    $db = $this->getMock('Db', array('getUser'));
+    $db->expects($this->any())
+      ->method('getUser')
+      ->with($this->equalTo('nonowner@example.com'))
+      ->will($this->returnValue('PASS'));
+    $this->user->inject('db', $db);
+
+    $this->user->clearUserCache();
+    $res = $this->user->getUserRecord();
+    $this->assertEquals('PASS', $res);
+  }
+
   public function testGetUserRecordWhenError()
   {
     $db = $this->getMock('Db', array('getUser'));

@@ -10,7 +10,7 @@ class Credential extends BaseModel
 
   const nonceCacheKey = 'oauthTimestamps';
   public $oauthException, $oauthParams, $provider, $sendHeadersOnError = true, $isUnitTest = false;
-  private static $consumer = null, $requestStatus = null;
+  protected static $consumer = null, $requestStatus = null;
 
   /**
     * Constructor
@@ -239,7 +239,7 @@ class Credential extends BaseModel
     if(!self::$consumer)
       return false;
 
-    return self::$consumer['owner'];
+    return self::$consumer['actor'];
   }
 
   public function getErrorAsString()

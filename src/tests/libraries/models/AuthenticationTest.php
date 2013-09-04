@@ -98,24 +98,6 @@ class AuthenticationTest extends PHPUnit_Framework_TestCase
     $this->authentication->requireAuthentication();
   }
 
-  public function testRequireAuthenticationOAuthValid()
-  {
-    $this->credential->expects($this->any())
-      ->method('isOAuthRequest')
-      ->will($this->returnValue(true));
-    $this->credential->expects($this->any())
-      ->method('checkRequest')
-      ->will($this->returnValue(true));
-    $this->credential->expects($this->any())
-      ->method('getErrorAsString')
-      ->will($this->returnValue('foobar'));
-
-    $this->authentication->inject('credential', $this->credential);
-
-    // as long as no exception is thrown, we're good
-    $this->authentication->requireAuthentication();
-  }
-
   /**
   * @expectedException OPAuthorizationSessionException
   */

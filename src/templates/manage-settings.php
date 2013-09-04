@@ -60,16 +60,18 @@
           <table class="table table-striped">
             <thead>
               <tr>
+                <th>User</th>
                 <th>Application Name</th>
                 <th></th>
               </tr>
             </thead>
             <?php foreach($credentials as $credential) { ?>
               <tr>
+                <td><?php $this->utility->safe($credential['actor']); ?></td>
                 <td>
                   <?php $this->utility->safe($credential['name']); ?>
                   <?php if(!empty($credential['dateCreated'])) { ?>
-                    <small><em class="credential-date">(<?php $this->utility->safe(ucwords($credential['type'])); ?> token created on <?php $this->utility->dateLong($credential['dateCreated']); ?>)</em></small>
+                    <div><small><em class="credential-date">(<?php $this->utility->safe(ucwords($credential['type'])); ?> token created on <?php $this->utility->dateLong($credential['dateCreated']); ?>)</em></small></div>
                   <?php } ?>
                 </td>
                 <td>

@@ -1343,22 +1343,28 @@ class DatabaseMySql implements DatabaseInterface
     * Update the information for the user record.
     * This method overwrites existing values present in $params.
     *
-    * @param string $id ID of the user to update which is always 1.
     * @param array $params Attributes to update.
     * @return boolean
     */
   public function postUser($params)
   {
+    $id = $this->owner;
+    if(isset($params['id']))
+    {
+      $id = $params['id'];
+      unset($params['id']);
+    }
+
     $params = $this->prepareUser($params);
     if(isset($params['password']) && !empty($params['password']))
     {
       $sql = "UPDATE `{$this->mySqlTablePrefix}user` SET `password`=:password,`extra`=:extra WHERE `id`=:id";
-      $params = array(':id' => $this->owner, ':password' => $params['password'], ':extra' => $params['extra']);
+      $params = array(':id' => $id, ':password' => $params['password'], ':extra' => $params['extra']);
     }
     else
     {
       $sql = "UPDATE `{$this->mySqlTablePrefix}user` SET `extra`=:extra WHERE `id`=:id";
-      $params = array(':id' => $this->owner, ':extra' => $params['extra']);
+      $params = array(':id' => $id, ':extra' => $params['extra']);
     }
 
     $res = $this->db->execute($sql, $params); 
@@ -1563,7 +1569,6 @@ class DatabaseMySql implements DatabaseInterface
     * Add a new user to the database
     * This method does not overwrite existing values present in $params - hence "new user".
     *
-    * @param string $id ID of the user to update which is always 1.
     * @param array $params Attributes to update.
     * @return boolean
     */

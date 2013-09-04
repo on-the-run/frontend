@@ -55,7 +55,7 @@ class ApiUserController extends ApiBaseController
     $email = $_POST['email'];
     if($email == $this->config->user->email)
     {
-      $tokenUrl = $this->user->generatePasswordRequestUrl();
+      $tokenUrl = $this->user->generatePasswordResetUrl();
       $templateObj = getTemplate();
       $template = sprintf('%s/email/password-reset.php', $this->config->paths->templates);
       $body = $this->template->get($template, array('tokenUrl' => $tokenUrl));

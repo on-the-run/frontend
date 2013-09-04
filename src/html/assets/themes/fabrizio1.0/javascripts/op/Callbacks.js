@@ -119,6 +119,15 @@
       var url = $('input[name="r"]', $('form.login')).val();
       location.href = url;
     };
+    this.passwordReset = function(response) {
+      var $button = this;
+      if(response.code !== 200) {
+        TBX.notification.show('We could not update your password.', 'flash', 'error');
+        OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-warning-sign'});
+        return;
+      }
+      location.href = '/';
+    };
     this.personaSuccess = function(assertion) {
       var params = {assertion: assertion};
       OP.Util.makeRequest('/user/browserid/login.json', params, TBX.callbacks.loginProcessed);

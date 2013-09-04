@@ -51,13 +51,16 @@ class Authentication
     *
     * @return boolean
     */
-  public function requireAuthentication($actions = array(Permission::create), $resources = null)
+  public function requireAuthentication($actions = array(), $resources = null)
   {
     // TODO !group enforce group permissions for oauth requests
     
     // first check if it's an oauth request
     // else the user has to be logged in
     // if they're logged in and not an admin we still have to verify permissions.
+    
+    // if the request is an OAuth request then validate if it's a valid request
+    //  we'll check permissions below
     if($this->credential->isOAuthRequest())
     {
       if(!$this->credential->checkRequest())
@@ -65,7 +68,9 @@ class Authentication
         OPException::raise(new OPAuthorizationOAuthException($this->credential->getErrorAsString()));
       }
     }
-    elseif(!$this->user->isLoggedIn())
+    
+    // now we check permissions regardless if it's an oauth or cookie session
+    if(!$this->user->isLoggedIn())
     {
       OPException::raise(new OPAuthorizationSessionException());
     }

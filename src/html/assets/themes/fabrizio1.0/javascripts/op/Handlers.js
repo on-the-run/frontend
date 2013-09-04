@@ -384,6 +384,21 @@
         }
       );
     };
+    this.submit.passwordReset = function(ev) {
+      ev.preventDefault();
+      var $form = $(ev.target), $button = $('button[type="submit"]'), url = $form.attr('action')+'.json', password = $('input[name="password"]', $form).val(), passwordConfirm = $('input[name="password-confirm"]', $form).val();
+      if(password.length === 0) {
+        TBX.notification.show('Please enter a password.', 'flash', 'error');
+        OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-warning-sign'});
+        return;
+      } else if(password !== passwordConfirm) {
+        TBX.notification.show('Sorry, your passwords don\'t match.', 'flash', 'error');
+        OP.Util.fire('callback:replace-spinner', {button: $button, icon:'icon-warning-sign'});
+        return;
+      }
+
+      OP.Util.makeRequest(url, $form.serializeArray(), TBX.callbacks.passwordReset.bind($button), 'json', 'post');
+    };
     this.submit.pluginUpdate = function(ev) {
       ev.preventDefault();
       var form = $(ev.target),

@@ -23,7 +23,6 @@ class CredentialTest extends PHPUnit_Framework_TestCase
 
     $this->credential = new Credential(array('utility' => $utility, 'db' => new FauxObject));
     $this->credential->sendHeadersOnError = false;
-    $this->credential->isUnitTest = true;
     $this->credential->reset();
     $this->token = 'abcdefghijklmnopqrstuvwxyz0123456789';
   }
@@ -321,6 +320,25 @@ class CredentialTest extends PHPUnit_Framework_TestCase
     
     $res = $this->credential->checkToken($provider);
     $this->assertEquals(OAUTH_VERIFIER_INVALID, $res, 'When type is request and oauth verifier does not match return OAUTH_VERIFIER_INVALID');
+  }
+
+  public function testGetEmailFromOAuth()
+  {
+    // reset cached consumer
+    $this->credential->reset();
+
+    $expected = array('type' => Credential::typeRequest, 'owner' => 'owner@example.com', 'actor' => 'actor@example.com', 'verifier' => 'verifier_mismatch', 'userSecret' => 'secret', 'time' => time());
+    $db = $this->getMock('Db', array('getCredential'));
+    $db->expects($this->any())
+      ->method('getCredential')
+      ->will($this->returnValue($expected));
+    $this->credential->inject('db', $db);
+
+    // we have to refetch the consumer
+    $this->credential->getConsumer('foo');
+
+    $res = $this->credential->getEmailFromOAuth();
+    $this->assertEquals('actor@example.com', $res, 'Email from OAuth should be actor');
   }
 
   /**
