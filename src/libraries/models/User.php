@@ -16,14 +16,16 @@ class User extends BaseModel
     * @access private
     * @var array
     */
-  protected $user, $userArray = array(), $credential, $themeObj;
+  protected $user, $userArray = array(), $credential, $themeObj, $email = null;
 
   /*
    * Constructor
    */
-  public function __construct()
+  public function __construct($email = null)
   {
     parent::__construct();
+    if($email !== null)
+      $this->email = $email;
   }
 
   /**
@@ -207,7 +209,7 @@ class User extends BaseModel
     if($cache && $this->user)
       return $this->user;
 
-    $res = $this->db->getUser(null, $lock);
+    $res = $this->db->getUser($this->email, $lock);
     // if null create, onerror return false
     if($res === null)
     {
@@ -217,7 +219,7 @@ class User extends BaseModel
         return false;
 
       // fetch the record to return
-      $res = $this->db->getUser(null, $lock);
+      $res = $this->db->getUser($this->email, $lock);
       if(!$res)
         return false;
     }

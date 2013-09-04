@@ -31,10 +31,12 @@ class Account extends BaseModel
   {
     $emailer = new Emailer;
     $user = new User;
+    $userBy = new User($user->getEmailAddress());
+    $userTo = new User($email);
 
-    $by = $user->getEmailAddress();
+    $by = $userBy->getEmailAddress();
     $template = sprintf('%s/email/account-created.php', $this->config->paths->templates);
-    $body = getTemplate()->get($template, array('passwordLink' => $user->generatePasswordRequestUrl(), 'email' => $email, 'by' => $by));
+    $body = getTemplate()->get($template, array('passwordLink' => $userTo->generatePasswordResetUrl(), 'email' => $email, 'by' => $by));
 
     $emailer->setRecipients(array($email));
     $emailer->setSubject(sprintf('Your Trovebox account has been created by %s', $by));
