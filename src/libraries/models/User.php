@@ -288,9 +288,25 @@ class User extends BaseModel
 
     $user = $this->config->user;
     $credential = $this->getCredentialObject();
+    $loggedInEmail = $this->getEmailAddress();
     if($credential->isOAuthRequest())
     {
-      return $credential->checkRequest() === true && $credential->getEmailFromOAuth() === $user->email;;
+      if(!$credential->checkRequest())
+      {
+        return false;
+      }
+      if($includeAdmin === false)
+      {
+        return $loggedInEmail === $user->email;
+      }
+      elseif(isset($user->admins))
+      {
+        // TODO put this in a function as it's reused in the else
+        $admins = (array)explode(',', $user->admins);
+
+        if(array_search(strtolower($loggedInEmail), array_map('strtolower', $admins)) !== false)
+          return true;
+      }
     }
     elseif(!$this->isLoggedIn())
     {
@@ -300,7 +316,7 @@ class User extends BaseModel
     {
       if($user === null)
         return false;
-      $loggedInEmail = $this->session->get('email');
+
       $len = max(strlen($loggedInEmail), strlen($user->email));
       $isOwner = isset($user->email) && strncmp(strtolower($loggedInEmail), strtolower($user->email), $len) === 0;
       if($isOwner)

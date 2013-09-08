@@ -540,7 +540,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 
   public function testIsOwnerOAuthValidNotOwner()
   {
-    $this->credential->expects($this->once())
+    $this->credential->expects($this->exactly(2))
       ->method('isOAuthRequest')
       ->will($this->returnValue(true));
     $this->credential->expects($this->once())
@@ -561,7 +561,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 
   public function testIsOwnerOAuthTrue()
   {
-    $this->credential->expects($this->once())
+    $this->credential->expects($this->exactly(2))
       ->method('isOAuthRequest')
       ->will($this->returnValue(true));
     $this->credential->expects($this->once())
@@ -578,6 +578,50 @@ class UserTest extends PHPUnit_Framework_TestCase
 
     $res = $this->user->isOwner();
     $this->assertTrue($res);
+  }
+
+  public function testIsAdminOAuthTrue()
+  {
+    $this->credential->expects($this->exactly(2))
+      ->method('isOAuthRequest')
+      ->will($this->returnValue(true));
+    $this->credential->expects($this->once())
+      ->method('checkRequest')
+      ->will($this->returnValue(true));
+    $this->credential->expects($this->once())
+      ->method('getEmailFromOAuth')
+      ->will($this->returnValue('test@example.com'));
+    $this->user->inject('credential', $this->credential);
+    $config = new stdClass;
+    $config->user = new stdClass;
+    $config->user->email = 'dne@example.com';
+    $config->user->admins = 'test@example.com,foo@bar.com';
+    $this->user->inject('config', $config);
+
+    $res = $this->user->isOwner(true);
+    $this->assertTrue($res);
+  }
+
+  public function testIsAdminOAuthFalse()
+  {
+    $this->credential->expects($this->exactly(2))
+      ->method('isOAuthRequest')
+      ->will($this->returnValue(true));
+    $this->credential->expects($this->once())
+      ->method('checkRequest')
+      ->will($this->returnValue(true));
+    $this->credential->expects($this->once())
+      ->method('getEmailFromOAuth')
+      ->will($this->returnValue('test@example.com'));
+    $this->user->inject('credential', $this->credential);
+    $config = new stdClass;
+    $config->user = new stdClass;
+    $config->user->email = 'dne@example.com';
+    $config->user->admins = 'dne2@example.com,foo@bar.com';
+    $this->user->inject('config', $config);
+
+    $res = $this->user->isOwner(true);
+    $this->assertFalse($res);
   }
 
   public function testLogin()
