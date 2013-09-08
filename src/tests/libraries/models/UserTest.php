@@ -602,6 +602,28 @@ class UserTest extends PHPUnit_Framework_TestCase
     $this->assertTrue($res);
   }
 
+  public function testIsAdminButAsOwnerOAuthTrue()
+  {
+    $this->credential->expects($this->exactly(2))
+      ->method('isOAuthRequest')
+      ->will($this->returnValue(true));
+    $this->credential->expects($this->once())
+      ->method('checkRequest')
+      ->will($this->returnValue(true));
+    $this->credential->expects($this->once())
+      ->method('getEmailFromOAuth')
+      ->will($this->returnValue('test@example.com'));
+    $this->user->inject('credential', $this->credential);
+    $config = new stdClass;
+    $config->user = new stdClass;
+    $config->user->email = 'test@example.com';
+    $config->user->admins = 'dne@example.com,foo@bar.com';
+    $this->user->inject('config', $config);
+
+    $res = $this->user->isOwner(true);
+    $this->assertTrue($res);
+  }
+
   public function testIsAdminOAuthFalse()
   {
     $this->credential->expects($this->exactly(2))

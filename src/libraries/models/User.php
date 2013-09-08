@@ -295,24 +295,22 @@ class User extends BaseModel
       {
         return false;
       }
-      if($includeAdmin === false)
+      else
       {
-        return $loggedInEmail === $user->email;
-      }
-      elseif(isset($user->admins))
-      {
-        // TODO put this in a function as it's reused in the else
-        $admins = (array)explode(',', $user->admins);
-
-        if(array_search(strtolower($loggedInEmail), array_map('strtolower', $admins)) !== false)
+        if($loggedInEmail === $user->email)
           return true;
+
+        if($includeAdmin && isset($user->admins))
+        {
+          // TODO put this in a function as it's reused in the else
+          $admins = (array)explode(',', $user->admins);
+
+          if(array_search(strtolower($loggedInEmail), array_map('strtolower', $admins)) !== false)
+            return true;
+        }
       }
     }
-    elseif(!$this->isLoggedIn())
-    {
-      return false;
-    }
-    else
+    elseif($this->isLoggedIn())
     {
       if($user === null)
         return false;
@@ -329,6 +327,7 @@ class User extends BaseModel
           return true;
       }
     }
+
     return false;
   }
 
