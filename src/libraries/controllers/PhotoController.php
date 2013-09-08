@@ -200,7 +200,7 @@ class PhotoController extends BaseController
     */
   public function upload()
   {
-    getAuthentication()->requireAuthentication(array('C'));
+    getAuthentication()->requireAuthentication(array(Permission::create));
     $userObj = new User;
     /*if(!$userObj->isAdmin())
     {
