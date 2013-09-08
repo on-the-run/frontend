@@ -20,7 +20,7 @@ class ApiActivityController extends ApiBaseController
 
   public function create()
   {
-    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireAuthentication(array(Permission::create));
     getAuthentication()->requireCrumb();
     $attributes = $_POST;
     if(isset($attributes['crumb']))

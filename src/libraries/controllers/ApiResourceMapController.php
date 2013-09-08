@@ -22,7 +22,7 @@ class ApiResourceMapController extends ApiBaseController
 
   public function create()
   {
-    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireAuthentication(array(Permission::create));
     $id = $this->resourceMap->create($_POST);
     if(!$id)
       return $this->error('Could not generate resource map.', false);

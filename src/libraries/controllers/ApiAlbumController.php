@@ -141,7 +141,7 @@ class ApiAlbumController extends ApiBaseController
 
   public function updateIndex($albumId, $type, $action)
   {
-    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireAuthentication(array(Permission::create), array($albumId));
     getAuthentication()->requireCrumb();
     $this->logger->info(sprintf('Calling ApiAlbumController::updateIndex with %s, %s, %s', $albumId, $type, $action));
 
