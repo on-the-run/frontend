@@ -22,6 +22,16 @@ class ApiManageController extends ApiBaseController
     else
       $post = $_POST;
 
+    // new admins?
+    if(isset($post['admins']))
+    {
+      $accountObj = new Account;
+      $adminDiff = $this->adminDiff($post['admins']);
+      // if new users we add/notifiy
+      if(!empty($adminDiff['add']))
+        $this->notifyAdministrators($adminDiff['add']);
+    }
+
     foreach($post as $key => $value)
     {
       switch($key)
@@ -86,5 +96,51 @@ class ApiManageController extends ApiBaseController
       return $this->success('Features successfully updated', true);
     else
       return $this->error('Could not update features', false);
+  }
+
+  private function adminDiff($new)
+  {
+    $existing = (array)explode(',', getConfig()->get('user')->admins);
+    sort($existing);
+
+    if(!is_array($new))
+      $new = (array)explode(',', $new);
+    sort($new);
+
+    return array(
+      'add' => array_diff($new, $existing),
+      'remove' => array_diff($existing, $new)
+    );
+  }
+
+  private function notifyAdministrators($emails)
+  {
+    $account = new Account;
+    $user = new User;
+    $utility = new Utility;
+    $host = $utility->getHost();
+
+    $template = sprintf('%s/email/administrator-granted.php', $this->config->paths->templates);
+    $body = getTemplate()->get($template, array(
+      'siteSignInUrl' => sprintf('%s://%s/user/login', $utility->getProtocol(false), $utility->getHost()),
+      'siteHost' => $host,
+      'forgotPasswordUrl' => 'https://trovebox.com/password/forgot' // fix this to not be hard coded
+    ));
+
+    foreach($emails as $email)
+    {
+      if(empty($email))
+        continue;
+
+      if(!$account->emailExists($email))
+        $account->create($email, true);
+
+      // we need to instantiate a new emailer since we are sending one email per member
+      $emailer = new Emailer;
+      $emailer->setSubject(sprintf("You've been granted administrative access to a Trovebox site by %s", $user->getEmailAddress()));
+      $emailer->setRecipients(array($email));
+      $emailer->setBody($body);
+      $emailer->send();
+    }
   }
 }
