@@ -1,7 +1,7 @@
 <div class="row">
   <div class="span8">
     <?php if($this->user->isAdmin()) { ?>
-      <div class="userbadge user-badge-meta"data-show-storage="true"></div>
+      <div class="userbadge user-badge-meta" data-show-storage="true"></div>
     <?php } else { ?>
       <div class="userbadge user-badge-meta"></div>
     <?php } ?>
