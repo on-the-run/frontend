@@ -161,7 +161,7 @@
                 </div>
               </div>
               <div class="span2" data-album="<?php $this->utility->safe($albumId); ?>">
-                <h4 class="name"><?php $this->utility->safe($allAlbums[$albumId]['name']); ?> hello world</h4>
+                <h4 class="name"><?php $this->utility->safe($allAlbums[$albumId]['name']); ?></h4>
                 <!--<form action="/group/<?php $this->utility->safe($group['id']); ?>/update" class="groupUpdateHash">
                   <div class="controls">
                     <label class="checkbox inline">
