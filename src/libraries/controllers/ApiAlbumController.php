@@ -105,7 +105,8 @@ class ApiAlbumController extends ApiBaseController
       $allowedAlbums = $permissionObj->allowedAlbums($permission);
       foreach($albums as $key => $alb)
       {
-        if(!in_array($alb['id'], $allowedAlbums))
+        // if an album has no public photos then we check to see if this user has permission to view it
+        if($alb['countPublic'] === 0 && !in_array($alb['id'], $allowedAlbums))
         {
           unset($albums[$key]);
           $totalRows--;
