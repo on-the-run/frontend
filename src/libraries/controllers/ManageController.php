@@ -89,11 +89,10 @@ class ManageController extends BaseController
     {
       // if we have albums then skip having to fetch each album in the group
       //  else we leave the keys as is, no harm no foul
+      $tmpAllAlbums = array();
       foreach($allAlbums as $key => $album)
-      {
-        $allAlbums[$album['id']] = $album;
-        unset($allAlbums[$key]);
-      }
+        $tmpAllAlbums[$album['id']] = $album;
+      $allAlbums = $tmpAllAlbums;
 
       foreach($group['album'] as $albumId => $creds)
       {
