@@ -116,6 +116,8 @@ class ApiAlbumController extends ApiBaseController
           unset($albums[$key]['countPublic'], $albums[$key]['countPrivate']);
         }
       }
+      // since we might remove elements we need to rekey $albums
+      $albums = array_values($albums);
       $albums[0]['totalRows'] = $totalRows;
     }
     else
