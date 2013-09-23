@@ -29,7 +29,7 @@ body.trovebox {
   }
   
   .navbar-inner-secondary {
-    background-color: @color_banner_secondary;
+    background-color: @hdr_2nd_background_color;
     background-image: none;
     padding: 10px 0;
     min-height: auto;
@@ -68,7 +68,7 @@ body.trovebox {
   }
   
   .navbar-inner-primary {
-    background-color: @color_banner_primary;
+    background-color: @hdr_background_color;
     background-image: none;
     padding: 12px 0;
     min-height: auto;
@@ -92,7 +92,7 @@ body.trovebox {
           line-height: 27px;
           font-size: 13px;
           font-weight: 500;
-          color: @color_header_menu;
+          color: @hdr_link_color;
           
           i {
             font-size: 14px;
@@ -103,7 +103,7 @@ body.trovebox {
           }
           
           &:hover {
-            color: #fff;
+            color: @hdr_link_hover_color;
             i {
               .opacity(99);
             }
@@ -111,7 +111,7 @@ body.trovebox {
         }
         &.active {
           a, a:hover {
-            color: @color_header_menu_active;
+            color: @hdr_link_active_color;
             i {
               .opacity(99);
             }
@@ -137,8 +137,8 @@ body.trovebox {
       padding-top: 2px;
       
       input[type=search] {
-        background-color: @color_theme_secondary;
-        color: @color_header_menu;
+        background-color: @hdr_input_background_color;
+        color: @hdr_input_font_color;
         border-radius: 2px;
         box-shadow: 1px 1px 0 #000;
         border-color: transparent;
@@ -160,7 +160,7 @@ body.trovebox {
     .btn-navbar {
       float: right;
       padding: 10px;
-      background: @color_theme_tertiary none !important;
+      background: @btn_3rd_background_color none !important;
     }
     
     .user {
@@ -233,7 +233,7 @@ body.trovebox {
         li {
           > a {
             &:hover, &:focus {
-              background-color: lighten(@color_theme_secondary, 10%);
+              background-color: lighten(@hdr_dropdown_link_color, 10%);
               background-image: none;
               color: #fff;
             }
@@ -253,7 +253,7 @@ body.trovebox {
       line-height: 0;
       left: 50%;
       margin-left: -5px;
-      border-bottom: 5px solid @color_banner_secondary;
+      border-bottom: 5px solid @hdr_2nd_background_color;
       border-left: 7px solid transparent;
       border-right: 7px solid transparent;
       bottom: -12px;
@@ -266,7 +266,7 @@ body.trovebox {
   }
   
   .navbar-inner-secondary {
-    color: @color_banner_secondary_font;
+    color: @hdr_2nd_background_font_color;
     font-size: 13px;
     line-height: 18px;
     filter:none;
@@ -295,10 +295,10 @@ body.trovebox {
         
         > a, .help-container a {
           padding: 0;
-          color: @color_banner_secondary_font;
+          color: @hdr_2nd_background_font_color;
           text-shadow: 0 0 0;
           i {
-            color: @color_banner_secondary_font;
+            color: @hdr_2nd_background_font_color;
             margin-right: .2em;
           }
           &:hover {
@@ -307,8 +307,7 @@ body.trovebox {
         }
         &.active {
           a, a:hover {
-            color: @color_header_menu_active;
-            
+            color: @hdr_link_active_color;
           }
         }
         &:first-child {
@@ -326,7 +325,7 @@ body.trovebox {
         }
         &.dropdown.open{
           > a {
-            color: darken( @color_banner_secondary_font, 20% );
+            color: darken( @hdr_2nd_background_font_color, 20% );
             &:focus {
               outline: 0;
             }
@@ -353,7 +352,7 @@ body.trovebox {
         li {
           > a {
             &:hover, &:focus {
-              background-color: lighten(@color_theme_secondary, 10%);
+              background-color: lighten(@hdr_dropdown_link_color, 10%);
               background-image: none;
               color: #fff;
             }
@@ -378,7 +377,7 @@ body.trovebox {
         position:absolute;
         left:17px;
         top:25px;
-        color: @color_theme;
+        color: @hdr_close_color;
         //opacity: 1;
       }
 
@@ -456,7 +455,7 @@ body.trovebox {
       .nav-collapse {
         margin: 0px -10px;
         padding-bottom: 0px;
-        background-color: darken( @color_banner_primary, 2% );
+        background-color: darken( @hdr_background_color, 2% );
       }
       
       .nav {
@@ -471,7 +470,7 @@ body.trovebox {
           }
           &.active {
             a, a:hover {
-              color: @color_header_menu_active;
+              color: @hdr_link_active_color;
               i {
                 .opacity(99);
               }
