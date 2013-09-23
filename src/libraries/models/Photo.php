@@ -212,6 +212,7 @@ class Photo extends BaseModel
       return false;
     }
 
+    // Reuse files already downloaded when generating multiple returnSizes #756
     $filename = $this->fs->getPhoto($photo['pathBase']);
     if(!$filename)
     {
