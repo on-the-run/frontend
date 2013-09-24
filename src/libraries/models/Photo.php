@@ -6,7 +6,7 @@
  * Upload, update, delete and generate, oh my!
  * @author Jaisen Mathai <jaisen@jmathai.com>
  */
-class Photo extends BaseModel
+class Photo extends Media
 {
   public function __construct($params = null)
   {
@@ -483,77 +483,6 @@ class Photo extends BaseModel
     return false;
   }
 
-  /**
-    * Reads exif data from a photo.
-    *
-    * @param $photo Path to the photo.
-    * @return array
-    */
-  protected function readExif($photo, $allowAutoRotate)
-  {
-    $exif = @exif_read_data($photo);
-    if(!$exif)
-      $exif = array();
-
-    $size = getimagesize($photo);
-    // DateTimeOriginal is the right thing. If it is not there
-    // use DateTime which might be the date the photo was modified
-    $parsedDate = $this->parseExifDate($exif, 'DateTimeOriginal');
-    if($parsedDate === false) 
-    {
-      $parsedDate = $this->parseExifDate($exif, 'DateTime');    
-      if($parsedDate === false)
-      {
-        if(array_key_exists('FileDateTime', $exif))
-          $parsedDate = $exif['FileDateTime'];
-        else
-          $parsedDate = time();
-      }
-    }
-    $dateTaken = $parsedDate;    
-
-    $width = $size[0];
-    $height = $size[1];
-
-    // Since we stopped auto rotating originals we have to use the Orientation from
-    //  exif and if this photo was autorotated
-    // Gh-1031 Gh-1149
-    if($this->autoRotateEnabled($allowAutoRotate))
-    {
-      // http://recursive-design.com/blog/2012/07/28/exif-orientation-handling-is-a-ghetto/
-      switch($exif['Orientation'])
-      {
-        case '6':
-        case '8':
-        case '5':
-        case '7':
-          $width = $size[1];
-          $height = $size[0];
-          break;
-      }
-    }
-
-    $exif_array = array('dateTaken' => $dateTaken, 'width' => $width,
-      'height' => $height, 'cameraModel' => @$exif['Model'],
-      'cameraMake' => @$exif['Make'],
-      'ISO' => @$exif['ISOSpeedRatings'],
-      'Orientation' => @$exif['Orientation'],
-      'exposureTime' => @$exif['ExposureTime']);
-
-    if(isset($exif['GPSLongitude'])) {
-      $exif_array['longitude'] = $this->getGps($exif['GPSLongitude'], $exif['GPSLongitudeRef']);
-    }
-
-    if(isset($exif['GPSLatitude'])) {
-      $exif_array['latitude'] = $this->getGps($exif['GPSLatitude'], $exif['GPSLatitudeRef']);
-    }
-
-    $exif_array['FNumber'] = $this->frac2Num(@$exif['FNumber']);
-    $exif_array['focalLength'] = $this->frac2Num(@$exif['FocalLength']);
-
-    return $exif_array;
-  }
-
   public function transform($id, $transformations)
   {
     $photo = $this->db->getPhoto($id);
@@ -620,7 +549,13 @@ class Photo extends BaseModel
       return $id;
 
     $tagObj = new Tag;
-    $attributes = $this->whitelistParams($attributes);
+
+    // to preserve json columns we have to do complete writes
+    $currentPhoto = $this->db->getPhoto($id);
+    unset($currentPhoto['id']);
+    $attributes = array_merge($currentPhoto, $attributes);
+
+    $attributes = $this->whitelistAttributes($attributes);
     if(isset($attributes['tags']) && !empty($attributes['tags']))
       $attributes['tags'] = $tagObj->sanitizeTagsAsString($attributes['tags']);
 
@@ -641,81 +576,42 @@ class Photo extends BaseModel
 
   public function replace($id, $localFile, $name, $attributes = array())
   {
+    $tagObj = new Tag;
+
     // check if file type is valid
-    if(!$this->utility->isValidMimeType($localFile))
+    if(!$this->isValidMimeType($localFile))
     {
       $this->logger->warn(sprintf('Invalid mime type for %s', $localFile));
       return false;
     }
 
+    $filenameOriginal = $name;
+
+    // access $attribute values before being mutated
     $allowAutoRotate = isset($attributes['allowAutoRotate']) ? $attributes['allowAutoRotate'] : '1';
-    $exif = $this->readExif($localFile, $allowAutoRotate);
-    $iptc = $this->readIptc($localFile);
+    $skipOriginal = isset($attributes['skipOriginal']) ? $attributes['skipOriginal'] : '0';
 
-    if(isset($attributes['dateTaken']) && !empty($attributes['dateTaken']))
-      $dateTaken = $attributes['dateTaken'];
-    elseif(isset($exif['dateTaken']))
-      $dateTaken = $exif['dateTaken'];
-    else
-      $dateTaken = time();
 
-    $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $dateTaken, $allowAutoRotate);
-    $paths = $resp['paths'];
+    $attributes = $this->prepareAttributes($attributes, $localFile, $name);
 
-    $attributes = array_merge($this->whitelistParams($attributes), $resp['paths']);
+    $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $attributes['dateTaken'], $allowAutoRotate);
+    $attributes = $this->setPathAttributes($attributes, $resp['paths']);
+    if($skipOriginal === '1')
+      unset($resp['path']['pathOriginal'], $attributes['pathOriginal']);
 
     if($resp['status'])
     {
       $this->logger->info("Photo ({$id}) successfully stored on the file system (replacement)");
-      $fsExtras = $this->fs->getMetaData($localFile);
 
-      if(!empty($fsExtras))
-        $attributes['extraFileSystem'] = $fsExtras;
-      $defaults = array('title', 'description', 'tags', 'latitude', 'longitude');
-      foreach($iptc as $iptckey => $iptcval)
-      {
-        if(empty($iptcval))
-          continue;
-
-        if($iptckey == 'tags')
-          $attributes['tags'] = implode(',', array_unique(array_merge((array)explode(',', $attributes['tags']), $iptcval)));
-        else if(!isset($attributes[$iptckey])) // do not clobber if already in $attributes #1011
-          $attributes[$iptckey] = $iptcval;
-      }
-
-      foreach($defaults as $default)
-      {
-        if(!isset($attributes[$default]))
-          $attributes[$default] = null;
-      }
-
-      $exifParams = array('width' => 'width', 'height' => 'height', 'cameraMake' => 'exifCameraMake', 'cameraModel' => 'exifCameraModel', 
-        'FNumber' => 'exifFNumber', 'exposureTime' => 'exifExposureTime', 'ISO' => 'exifISOSpeed', 'focalLength' => 'exifFocalLength', 'latitude' => 'latitude', 'longitude' => 'longitude');
-      foreach($exifParams as $paramName => $mapName)
-      {
-        // do not clobber if already in $attributes #1011
-        if(isset($exif[$paramName]) && !isset($attributes[$mapName]))
-          $attributes[$mapName] = $exif[$paramName];
-      }
-
-      $attributes['dateTakenDay'] = date('d', $dateTaken);
-      $attributes['dateTakenMonth'] = date('m', $dateTaken);
-      $attributes['dateTakenYear'] = date('Y', $dateTaken);
-      $attributes['hash'] = sha1_file($localFile);
-      $attributes['size'] = intval(filesize($localFile)/1024);
-      $attributes['host'] = $this->fs->getHost();
-      $attributes['filenameOriginal'] = $name;
-
-      $tagObj = new Tag;
+      // since tags can be created adhoc we need to ensure they're here
       if(isset($attributes['tags']) && !empty($attributes['tags']))
         $tagObj->createBatch($attributes['tags']);
-
-      $photo = $this->db->getPhoto($id);
 
       // normally we delete the existing photos
       // in some cases we may have already done this (migration)
       if(!isset($_POST['skipDeletes']) || empty($_POST['skipDeletes']))
       {
+        $photo = $this->db->getPhoto($id);
         $this->logger->info(sprintf('Purging photos in replace API for photo %s', $id));
         // purge photoVersions
         $delVersionsResp = $this->db->deletePhotoVersions($photo);
@@ -738,12 +634,8 @@ class Photo extends BaseModel
         }
       }
 
-      // trim all the attributes
-      foreach($attributes as $key => $val)
-        $attributes[$key] = $this->trim($val);
-
       // update photo paths / hash
-      $updPathsResp = $this->db->postPhoto($id, $attributes);
+      $updPathsResp = $this->update($id, $attributes);
 
       unlink($localFile);
       unlink($resp['localFileCopy']);
@@ -752,7 +644,7 @@ class Photo extends BaseModel
         return true;
     }
 
-    $this->logger->warn('Could not upload files for replacement');
+    $this->logger->warn("Photo ({$id}) could NOT be replaced on the file system");
     return false;
   }
 
@@ -806,8 +698,10 @@ class Photo extends BaseModel
     */
   public function upload($localFile, $name, $attributes = array())
   {
+    $tagObj = new Tag;
+
     // check if file type is valid
-    if(!$this->utility->isValidMimeType($localFile))
+    if(!$this->isValidMimeType($localFile))
     {
       $this->logger->warn(sprintf('Invalid mime type for %s', $localFile));
       return false;
@@ -819,113 +713,26 @@ class Photo extends BaseModel
       $this->logger->crit('Could not fetch next photo ID');
       return false;
     }
-    $tagObj = new Tag;
+
     $filenameOriginal = $name;
 
+    // access $attribute values before being mutated
     $allowAutoRotate = isset($attributes['allowAutoRotate']) ? $attributes['allowAutoRotate'] : '1';
-    $exif = $this->readExif($localFile, $allowAutoRotate);
-    $iptc = $this->readIptc($localFile);
 
-    if(isset($attributes['dateTaken']) && !empty($attributes['dateTaken']))
-      $dateTaken = $attributes['dateTaken'];
-    elseif(isset($exif['dateTaken']))
-      $dateTaken = $exif['dateTaken'];
-    else
-      $dateTaken = time();
+    $attributes = $this->prepareAttributes($attributes, $localFile, $name);
 
-    $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $dateTaken, $allowAutoRotate);
-    $paths = $resp['paths'];
-
-    $attributes = $this->whitelistParams($attributes);
+    $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $attributes['dateTaken'], $allowAutoRotate);
+    $attributes = $this->setPathAttributes($attributes, $resp['paths']);
 
     if($resp['status'])
     {
       $this->logger->info("Photo ({$id}) successfully stored on the file system");
-      $fsExtras = $this->fs->getMetaData($localFile);
-      if(!empty($fsExtras))
-        $attributes['extraFileSystem'] = $fsExtras;
-      $defaults = array('title', 'description', 'tags', 'latitude', 'longitude');
-      foreach($iptc as $iptckey => $iptcval)
-      {
-        if(empty($iptcval))
-          continue;
 
-        if($iptckey == 'tags')
-          $attributes['tags'] = implode(',', array_unique(array_merge((array)explode(',', $attributes['tags']), $iptcval)));
-        else if(!isset($attributes[$iptckey])) // do not clobber if already in $attributes #1011
-          $attributes[$iptckey] = $iptcval;
-      }
-
-      foreach($defaults as $default)
-      {
-        if(!isset($attributes[$default]))
-          $attributes[$default] = null;
-      }
-
-      $exifParams = array('width' => 'width', 'height' => 'height', 'cameraMake' => 'exifCameraMake', 'cameraModel' => 'exifCameraModel', 
-        'FNumber' => 'exifFNumber', 'exposureTime' => 'exifExposureTime', 'ISO' => 'exifISOSpeed', 'focalLength' => 'exifFocalLength', 'latitude' => 'latitude', 'longitude' => 'longitude');
-      foreach($exifParams as $paramName => $mapName)
-      {
-        // do not clobber if already in $attributes #1011
-        if(isset($exif[$paramName]) && !isset($attributes[$mapName]))
-          $attributes[$mapName] = $exif[$paramName];
-      }
-
-      if(isset($attributes['dateUploaded']) && !empty($attributes['dateUploaded']))
-        $dateUploaded = $attributes['dateUploaded'];
-      else
-        $dateUploaded = time();
-
-      if($this->config->photos->autoTagWithDate == 1)
-      {
-        $dateTags = sprintf('%s,%s', date('F', $dateTaken), date('Y', $dateTaken));
-        if(!isset($attributes['tags']) || empty($attributes['tags']))
-          $attributes['tags'] = $dateTags;
-        else
-          $attributes['tags'] .= ",{$dateTags}";
-      }
-
-      if(isset($exif['latitude']))
-        $attributes['latitude'] = floatval($exif['latitude']);
-      if(isset($exif['longitude']))
-        $attributes['longitude'] = floatval($exif['longitude']);
-      if(isset($attributes['tags']) && !empty($attributes['tags']))
-        $attributes['tags'] = $tagObj->sanitizeTagsAsString($attributes['tags']);
-
-    // since tags can be created adhoc we need to ensure they're here
+      // since tags can be created adhoc we need to ensure they're here
       if(isset($attributes['tags']) && !empty($attributes['tags']))
         $tagObj->createBatch($attributes['tags']);
 
-      $attributes['owner'] = $this->owner;
-      $attributes['actor'] = $this->getActor();
-
-      $attributes = array_merge(
-        $this->getDefaultAttributes(),
-        array(
-          'hash' => sha1_file($localFile), // fallback if not in $attributes
-          'size' => intval(filesize($localFile)/1024),
-          'filenameOriginal' => $filenameOriginal,
-          'width' => @$exif['width'],
-          'height' => @$exif['height'],
-          'dateTaken' => $dateTaken,
-          'dateTakenDay' => date('d', $dateTaken),
-          'dateTakenMonth' => date('m', $dateTaken),
-          'dateTakenYear' => date('Y', $dateTaken),
-          'dateUploaded' => $dateUploaded,
-          'dateUploadedDay' => date('d', $dateUploaded),
-          'dateUploadedMonth' => date('m', $dateUploaded),
-          'dateUploadedYear' => date('Y', $dateUploaded),
-          'pathOriginal' => $paths['pathOriginal'],
-          'pathBase' => $paths['pathBase']
-        ),
-        $attributes
-      );
-
-      // trim all the attributes
-      foreach($attributes as $key => $val)
-        $attributes[$key] = $this->trim($val);
-
-      $stored = $this->db->putPhoto($id, $attributes, $dateTaken);
+      $stored = $this->db->putPhoto($id, $attributes, $attributes['dateTaken']);
       unlink($localFile);
       unlink($resp['localFileCopy']);
       if($stored)
@@ -963,23 +770,6 @@ class Photo extends BaseModel
 
     $customName = substr($customPath, 0, strrpos($customPath, '.'));
     return "{$customName}_{$fragment}.jpg";
-  }
-
-  /**
-    * The default attributes for a new photo.
-    *
-    * @return array Default values for a new photo
-    */
-  private function getDefaultAttributes()
-  {
-    return array(
-      'appId' => $this->config->application->appId,
-      'host' => $this->fs->getHost(),
-      'views' => 0,
-      'status' => 1,
-      'permission' => 0, // TODO
-      'license' => ''
-    );
   }
 
   /**
@@ -1059,11 +849,6 @@ class Photo extends BaseModel
     return false;
   }
 
-  protected function trim($string)
-  {
-    return preg_replace('/^([ \r\n]+)|(\s+)$/', '', $string);
-  }
-
   private function createAndStoreBaseAndOriginal($name, $localFile, $dateTaken, $allowAutoRotate)
   {
     $paths = $this->generatePaths($name, $dateTaken);
@@ -1094,12 +879,86 @@ class Photo extends BaseModel
   }
 
   /**
+    * Reads exif data from a photo.
+    *
+    * @param $photo Path to the photo.
+    * @return array
+    */
+  protected function readExif($photo, $allowAutoRotate)
+  {
+    $exif = @exif_read_data($photo);
+    if(!$exif)
+      $exif = array();
+
+    $size = getimagesize($photo);
+    // DateTimeOriginal is the right thing. If it is not there
+    // use DateTime which might be the date the photo was modified
+    $parsedDate = $this->parseExifDate($exif, 'DateTimeOriginal');
+    if($parsedDate === false) 
+    {
+      $parsedDate = $this->parseExifDate($exif, 'DateTime');    
+      if($parsedDate === false)
+      {
+        if(array_key_exists('FileDateTime', $exif))
+          $parsedDate = $exif['FileDateTime'];
+        else
+          $parsedDate = time();
+      }
+    }
+    $dateTaken = $parsedDate;    
+
+    $width = $size[0];
+    $height = $size[1];
+
+    // Since we stopped auto rotating originals we have to use the Orientation from
+    //  exif and if this photo was autorotated
+    // Gh-1031 Gh-1149
+    if($this->autoRotateEnabled($allowAutoRotate) && isset($exif['Orientation']))
+    {
+      // http://recursive-design.com/blog/2012/07/28/exif-orientation-handling-is-a-ghetto/
+      switch($exif['Orientation'])
+      {
+        case '6':
+        case '8':
+        case '5':
+        case '7':
+          $width = $size[1];
+          $height = $size[0];
+          break;
+      }
+    }
+
+    $exif_array = array(
+      'dateTaken' => $dateTaken,
+      'width' => $width,
+      'height' => $height,
+      'cameraModel' => @$exif['Model'],
+      'cameraMake' => @$exif['Make'],
+      'ISO' => @$exif['ISOSpeedRatings'],
+      'Orientation' => @$exif['Orientation'],
+      'exposureTime' => @$exif['ExposureTime']);
+
+    if(isset($exif['GPSLongitude'])) {
+      $exif_array['longitude'] = $this->getGps($exif['GPSLongitude'], $exif['GPSLongitudeRef']);
+    }
+
+    if(isset($exif['GPSLatitude'])) {
+      $exif_array['latitude'] = $this->getGps($exif['GPSLatitude'], $exif['GPSLatitudeRef']);
+    }
+
+    $exif_array['FNumber'] = $this->frac2Num(@$exif['FNumber']);
+    $exif_array['focalLength'] = $this->frac2Num(@$exif['FocalLength']);
+
+    return $exif_array;
+  }
+
+  /**
     * Reads IPTC data from a photo.
     *
     * @param $photo Path to the photo.
     * @return array
     */
-  private function readIptc($photo)
+  protected function readIptc($photo)
   {
     $size = getimagesize($photo, $info);
     $iptc_array = array();
@@ -1127,32 +986,5 @@ class Photo extends BaseModel
       }
     }
     return $iptc_array;
-  }
-
-  private function whitelistParams($attributes)
-  {
-    $returnAttrs = array();
-    $matches = array('id' => 1,'host' => 1,'appId' => 1,'title' => 1,'description' => 1,'key' => 1,'hash' => 1,'tags' => 1,'size' => 1,'photo'=>1,'height' => 1,
-      'rotation'=>1,'altitude' => 1, 'latitude' => 1,'longitude' => 1,'views' => 1,'status' => 1,'permission' => 1,'albums'=>1,'groups' => 1,'license' => 1,
-      'pathBase' => 1, 'pathOriginal' => 1, 'dateTaken' => 1, 'dateUploaded' => 1, 'filenameOriginal' => 1 /* TODO remove in 1.5.0, only used for upgrade */);
-    $patterns = array('exif.*','date.*','extra.*');
-    foreach($attributes as $key => $val)
-    {
-      if(isset($matches[$key]))
-      {
-        $returnAttrs[$key] = $val;
-        continue;
-      }
-
-      foreach($patterns as $pattern)
-      {
-        if(preg_match("/^{$pattern}$/", $key))
-        {
-          $returnAttrs[$key] = $val;
-          continue;
-        }
-      }
-    }
-    return $returnAttrs;
   }
 }

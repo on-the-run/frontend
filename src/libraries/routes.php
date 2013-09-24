@@ -124,7 +124,7 @@ $routeObj->get('/map/([0-9.-]+)/([0-9.-]+)/([0-9]+)/([0-9]+x[0-9]+)/(.+)/map.png
  * /assets/cache/:version/:type/:file[,:file]
  */
 $routeObj->get('/assets/.*/stylesheets/lessc', array('AssetsController', 'lessc'));
-$routeObj->get('/assets/cache/([^/]+)/(js|css)/(c|m)(/.+)', array('AssetsController', 'get'));
+$routeObj->get('/assets/cache/([^/]+)/(js|css|swf)/(c|m)(/.+)', array('AssetsController', 'get'));
 $routeObj->get('/assets/versioned/[^/]+/(.+)', array('AssetsController', 'staticAsset'));
 
 

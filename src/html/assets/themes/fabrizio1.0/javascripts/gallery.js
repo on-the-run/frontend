@@ -8,11 +8,14 @@ var Gallery = (function($) {
 
   // defaults
   var configuration = {
+    'thumbnailHeight':180,
   	'thumbnailSize':'960x180',
   	'marginsOfImage': 10,
   	'defaultWidthValue':120,
   	'defaultHeightValue':120
   };
+
+  var videoQueue = {};
 
   var batchEmpty;
 
@@ -200,11 +203,6 @@ var Gallery = (function($) {
 		var defaultWidthValue = configuration['defaultWidthValue'];
 		var defaultHeightValue = configuration['defaultHeightValue'];
 
-		var overflow = $("<div/>");
-		overflow.css("width", ""+$nz(item.vwidth, defaultWidthValue)+"px");
-		overflow.css("height", ""+$nz(item[pathKey][1], defaultHeightValue)+"px");
-		overflow.css("overflow", "hidden");
-
     var urlParts = parseURL(item.url);
     if(pageObject.filterOpts !== undefined && pageObject.filterOpts !== null && pageObject.filterOpts.length > 0) {
       if(qs.length === 0)
@@ -212,47 +210,66 @@ var Gallery = (function($) {
       else
         urlParts.pathname = urlParts.pathname.replace('?', '/'+pageObject.filterOpts+'?');
     }
-		var link = $('<a/>');
-    link.attr('href', urlParts.pathname+qs);
-		link.attr("data-id", item.id);
-		
-		var img = $("<img/>");
-		img.attr("data-id", item.id);
-		img.attr("src", item[pathKey]);
-    //img.attr('class', 'photo-view-modal-click');
-    img.attr('class', 'photoModal');
-		img.attr("title", item.title);
-		img.css("width", "" + $nz(item[pathKey][1], defaultWidthValue) + "px");
-		img.css("height", "" + $nz(item[pathKey][2], defaultHeightValue) + "px");
-		img.css("margin-left", "" + (item.vx ? (-item.vx) : 0) + "px");
-		img.css("margin-top", "" + 0 + "px");
-		img.hide();
 
-		link.append(img);
-		overflow.append(link);
-		imageContainer.append(overflow);
-    
-    /**
-     * Add meta information to bottom
-     *
-     * @date 2012-12-11
-     * @author fabrizim
-     */
-    var meta = $('<div class="meta" />').appendTo(imageContainer)
-    // while we could grab this directly from the item,
-    // this should all be derived from the Backbone Store
-    // for the page
-      , model = op.data.store.Photos.get(item.id)
-      , view = new op.data.view.PhotoGallery({model: model, el: meta});
-    
-    view.render();
-    
-    // End meta section
+		var overflow = $("<div/>");
+		overflow.css("width", ""+$nz(item.vwidth, defaultWidthValue)+"px");
+		overflow.css("height", ""+$nz(item[pathKey][1], defaultHeightValue)+"px");
+		overflow.css("overflow", "hidden");
+    if(typeof(item.video) !== 'undefined') {
+      overflow.addClass("video");
+      overflow.append('<div class="video-element video-element-'+item.id+' is-splash" style="height:'+configuration.thumbnailHeight+'px; background:url(\''+item[pathKey]+'\') 100%;"/>');
+      videoQueue[item.id] = {
+        id: item.id,
+        //file:'http://content.bitsontherun.com/videos/lWMJeVvV-364767.mp4',
+        file:item.videoSource,
+        image: item[pathKey],
+        width: item.vwidth,
+        title: item.name,
+        height: configuration.thumbnailHeight
+      };
+      imageContainer.append(overflow);
+    } else {
+      var link = $('<a/>');
+      link.attr('href', urlParts.pathname+qs);
+      link.attr("data-id", item.id);
+      
+      var img = $("<img/>");
+      img.attr("data-id", item.id);
+      img.attr("src", item[pathKey]);
+      //img.attr('class', 'photo-view-modal-click');
+      img.attr('class', 'photoModal');
+      img.attr("title", item.title);
+      img.css("width", "" + $nz(item[pathKey][1], defaultWidthValue) + "px");
+      img.css("height", "" + $nz(item[pathKey][2], defaultHeightValue) + "px");
+      img.css("margin-left", "" + (item.vx ? (-item.vx) : 0) + "px");
+      img.css("margin-top", "" + 0 + "px");
+      img.hide();
 
-		// fade in the image after load
-		img.bind("load", function () { 
-			$(this).fadeIn(400); 
-		});
+      link.append(img);
+      overflow.append(link);
+      imageContainer.append(overflow);
+
+      // fade in the image after load
+      img.bind("load", function () { 
+        $(this).fadeIn(400); 
+      });
+    }
+
+      /**
+       * Add meta information to bottom
+       *
+       * @date 2012-12-11
+       * @author fabrizim
+       */
+      var meta = $('<div class="meta" />').appendTo(imageContainer)
+      // while we could grab this directly from the item,
+      // this should all be derived from the Backbone Store
+      // for the page
+        , model = op.data.store.Photos.get(item.id)
+        , view = new op.data.view.PhotoGallery({model: model, el: meta});
+      
+      view.render();
+
 
     // insert calendar icon
     currentDate = d.getYear()+'-'+d.getMonth()+'-'+d.getDay();
@@ -317,6 +334,8 @@ var Gallery = (function($) {
 				for(var i in rows[r]) {
 					var item = rows[r][i];
           createImageElement(photosContainer, item);
+          if(item.video)
+            OP.Util.fire('video:load', videoQueue[item.id]);
 				}
 			}
 		}

@@ -11,6 +11,7 @@ class AssetPipeline
 {
   const css = 'css';
   const js = 'js';
+  const swf = 'swf';
   const minified = 'm';
   const combined = 'c';
   protected $assets, $assetsRel, $docroot, $cacheDir, $mode, $types;
@@ -46,6 +47,7 @@ class AssetPipeline
       'ico' => 'image/vnd.microsoft.icon',
       'png' => 'image/png',
       'tiff' => 'image/tiff',
+      'swf' => 'application/x-shockwave-flash',
     );
 
   }
@@ -61,6 +63,14 @@ class AssetPipeline
   {
     if(file_exists($path = sprintf('%s%s', $this->docroot, $src)))
       $this->addAsset($path, 'js');
+
+    return $this;
+  }
+
+  public function addSwf($src)
+  {
+    if(file_exists($path = sprintf('%s%s', $this->docroot, $src)))
+      $this->addAsset($path, 'swf');
 
     return $this;
   }

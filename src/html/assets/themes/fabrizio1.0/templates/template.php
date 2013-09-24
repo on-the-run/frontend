@@ -56,6 +56,18 @@
       addJs('/assets/javascripts/openphoto-helper.js', false)->
       getUrl(AssetPipeline::js, $this->config->site->mediaVersion, $this->config->site->mode === 'prod'); ?>">
     </script>
+    <script type="text/javascript" 
+            src="<?php $this->utility->safe($this->config->site->cdnPrefix);?><?php echo getAssetPipeline(true)->setMode(AssetPipeline::combined)->
+      addJs($this->theme->asset('javascript', 'video/flowplayer.min.js', false))->
+      getUrl(AssetPipeline::js, $this->config->site->mediaVersion, $this->config->site->mode === 'prod'); ?>" 
+            data-swf="<?php $this->utility->safe($this->config->site->cdnPrefix);?><?php echo getAssetPipeline(true)->setMode(AssetPipeline::combined)->
+      addSwf($this->theme->asset('javascript', 'video/flowplayer.swf', false))->
+      getUrl(AssetPipeline::swf, $this->config->site->mediaVersion, $this->config->site->mode === 'prod'); ?>"
+            data-html5="<?php $this->utility->safe($this->config->site->cdnPrefix);?><?php echo getAssetPipeline(true)->setMode(AssetPipeline::combined)->
+      addJs($this->theme->asset('javascript', 'video/jwplayer.html5.js', false))->
+      getUrl(AssetPipeline::js, $this->config->site->mediaVersion, $this->config->site->mode === 'prod'); ?>"
+            class="flow-player-script">
+    </script>
 
     <script type="text/javascript">
       OP.Util.init(jQuery, {
@@ -124,6 +136,7 @@
                 addJs($this->theme->asset('javascript', 'op/Callbacks.js', false))->
                 addJs($this->theme->asset('javascript', 'op/Tutorial.js', false))->
                 addJs($this->theme->asset('javascript', 'op/Upload.js', false))->
+                addJs($this->theme->asset('javascript', 'op/Players.js', false))->
                 addJs($this->theme->asset('javascript', 'op/Format.js', false))->
                 addJs($this->theme->asset('javascript', 'gallery.js', false))->
                 addJs($this->theme->asset('javascript', 'intro.js', false))->

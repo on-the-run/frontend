@@ -226,6 +226,11 @@ class Credential extends BaseModel
     return OAUTH_OK;
   }
 
+  public function delete($consumerKey)
+  {
+    return $this->db->deleteCredential($consumerKey);
+  }
+
   public function getConsumer($consumerKey)
   {
     if(!self::$consumer)

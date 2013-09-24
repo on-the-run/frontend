@@ -638,6 +638,20 @@ class DatabaseMySql implements DatabaseInterface
   }
 
   /**
+   * Get a photo specified by $key
+   *
+   * @param string $key ID of the photo to retrieve
+   * @return mixed Array on success, FALSE on failure
+   */
+  public function getPhotoByKey($key)
+  {
+    $photo = $this->db->one("SELECT * FROM `{$this->mySqlTablePrefix}photo` WHERE owner=:owner AND `key`=:key", array(':owner' => $this->owner, ':key' => $key));
+    if(empty($photo))
+      return false;
+    return $this->normalizePhoto($photo);
+  }
+
+  /**
     * Get albums for a photo
     *
     * @param string $id ID of the photo to retrieve albums for
@@ -1248,8 +1262,8 @@ class DatabaseMySql implements DatabaseInterface
       unset($paramsUpd['id']);
       $bindings = $paramsUpd['::bindings'];
       $stmt = $this->sqlUpdateExplode($paramsUpd, $bindings);
-      $res = $this->db->execute("UPDATE `{$this->mySqlTablePrefix}photo` SET {$stmt} WHERE `id`=:id AND owner=:owner", 
-        array_merge($bindings, array(':id' => $id, ':owner' => $this->owner)));
+      $res = $this->db->execute("UPDATE `{$this->mySqlTablePrefix}photo` SET {$stmt} WHERE `owner`=:owner AND `id`=:id ", 
+        array_merge($bindings, array(':owner' => $this->owner, ':id' => $id)));
 
       if($res === false)
         return false;
@@ -2292,6 +2306,10 @@ class DatabaseMySql implements DatabaseInterface
         case 'extraDropboxSource':
         case 'extraFileSystem':
         case 'extraDatabase':
+        case 'video':
+        case 'videoStatus':
+        case 'videoSource':
+        case 'videoJobId':
           $extra[$key] = $value;
           break;
         case 'albums':

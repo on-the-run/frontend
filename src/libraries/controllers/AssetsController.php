@@ -29,7 +29,11 @@ class AssetsController extends BaseController
         $this->pipeline->addCss($file);
       elseif($type === 'js')
         $this->pipeline->addJs($file);
+      elseif($type === 'swf')
+        $this->pipeline->addSwf($file);
     }
+
+    header(sprintf('Content-type: %s', $this->pipeline->getContentType($type)));
 
     $this->pipeline->returnHeader($files[0]);
     if($compression === 'm')
