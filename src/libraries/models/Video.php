@@ -39,7 +39,7 @@ class Video extends Media
     $originalName = sprintf('%s-%s.%s', $rootName, uniqid(), $ext);
     
     return array(
-      'pathOriginal' => sprintf('/video/base/%s/%s', date('Ym', $dateTaken), $originalName),
+      'pathOriginal' => sprintf('/video/original/%s/%s', date('Ym', $dateTaken), $originalName),
       'pathBase' => sprintf('/base/%s/%s', date('Ym', $dateTaken), $baseName)
     );
   }

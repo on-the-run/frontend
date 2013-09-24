@@ -41,6 +41,7 @@ class AwsTranscoderPlugin extends PluginBase
     return array(
       'pipelineId' => '',
       'presets' => '',
+      'bucket' => '',
     );
   }
   
@@ -144,6 +145,7 @@ class AwsTranscoderPlugin extends PluginBase
   private function handleNotification($values)
   {
     $message = json_decode($values->Message);
+    $conf = $this->getConf();
 
     switch ($message->state) {
       case 'ERROR':
@@ -157,9 +159,9 @@ class AwsTranscoderPlugin extends PluginBase
 
         $params = array(
           'skipOriginal' => '1',
-          'photo' => str_replace('{count}', '00002', sprintf('http://opmeshared.s3.amazonaws.com/%s.jpg', $output->thumbnailPattern)),
+          'photo' => str_replace('{count}', '00002', sprintf('http://%s/%s.jpg', $conf->bucket, $output->thumbnailPattern)),
           'videoStatus' => 'completed',
-          'videoSource' => sprintf('http://opmeshared.s3.amazonaws.com/%s', $output->key)
+          'videoSource' => sprintf('http://%s/%s', $conf->bucket, $output->key)
         );
 
         $utilityObj = new Utility;
@@ -205,5 +207,5 @@ class AwsTranscoderPlugin extends PluginBase
       'video' => sprintf('video/custom/%s/%s-%s.%s', date('Ym', $video['dateTaken']), $parts['filename'], $preset['Id'], $preset['Container']),
       'thumbnail' => sprintf('video/custom/%s/%s-{count}', date('Ym', $video['dateTaken']), $parts['filename'])
     );
-  }  
+  }
 }
