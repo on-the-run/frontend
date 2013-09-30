@@ -309,12 +309,27 @@
     },
     
     loadImage : function(){
-      var c, src = this.model.get(this.imagePathKey);
+      var c, src = this.model.get(this.imagePathKey), next, previous, $photo;
+      previous = this.store.at(this.store.indexOf(this.model) - 1),
+      next = this.store.at(this.store.indexOf(this.model) + 1);
+
       this.$el.find('.photo img').remove();
       this.$el.addClass('loading');
-      this.$el.find('.photo')
+      $photo = this.$el.find('.photo');
+      $photo
         .width($(window).width())
         .height(($(window).height() - this.$el.find('.bd').position().top )+'px');
+      // add/remove class="first" to .photo to hide previous arrow
+      if(typeof(previous) === 'undefined')
+        $photo.addClass('first');
+      else
+        $photo.removeClass('first');
+
+      // add/remove class="last" to .photo to hide next arrow
+      if(typeof(next) === 'undefined')
+        $photo.addClass('last');
+      else
+        $photo.removeClass('last');
         
       // check if the image is not cached || if the imagePathKey is the same
       if( !(c = this.cache[this.model.get('id')]) || ($(c).attr('src') !== src) ){
@@ -358,9 +373,9 @@
       }
     },
 
+    // next if the image was clicked (as opposed to the arrows)
     nextIfImage : function(ev) {
       var el = ev.target;
-      console.log(el.tagName);
       if(el.tagName === 'IMG') {
         ev.stopPropagation();
         this.next(ev);
