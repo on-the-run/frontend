@@ -255,20 +255,20 @@ var Gallery = (function($) {
       });
     }
 
-      /**
-       * Add meta information to bottom
-       *
-       * @date 2012-12-11
-       * @author fabrizim
-       */
-      var meta = $('<div class="meta" />').appendTo(imageContainer)
-      // while we could grab this directly from the item,
-      // this should all be derived from the Backbone Store
-      // for the page
-        , model = op.data.store.Photos.get(item.id)
-        , view = new op.data.view.PhotoGallery({model: model, el: meta});
-      
-      view.render();
+    /**
+     * Add meta information to bottom
+     *
+     * @date 2012-12-11
+     * @author fabrizim
+     */
+    var meta = $('<div class="meta" />').appendTo(imageContainer)
+    // while we could grab this directly from the item,
+    // this should all be derived from the Backbone Store
+    // for the page
+      , model = op.data.store.Photos.get(item.id)
+      , view = new op.data.view.PhotoGallery({model: model, el: meta});
+    
+    view.render();
 
 
     // insert calendar icon

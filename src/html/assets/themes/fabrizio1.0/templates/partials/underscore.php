@@ -21,11 +21,6 @@
 </script>
 
 <script type="tmpl/underscore" id="user-badge-meta">
-  <?php if($isAdmin) { ?>
-    <h4 class="profile-name-meta username"><span class="name edit"><i class="icon-pencil"></i> <%- name %></span></h4>
-  <?php } else { ?>
-    <h4 class="profile-name-meta username"><span class="name"><%- name %></span></h4>
-  <?php } ?>
   <div class="tray-wrap">
     <span class="avatar">
       <img class="avatar profile-pic profile-photo" src="<%= photoUrl %>" <% if(photoUrl.search('gravatar.com') == -1) { %>title="Click the profile icon when mousing over any photo to set it as your profile photo." <% } %> />
@@ -101,7 +96,7 @@
         <img>
       </div>
       <div class="details">
-        <div class="container"><i class="icon-info-sign info toggler" data-target=".op-lightbox .details .container .detail-block"></i></div>
+        <div class="container"><i class="icon-info-sign info toggler" data-target=".op-lightbox .details .container .detail-block" title="Click to toggle the information panel"></i></div>
         <div class="container template">
         
         </div>
