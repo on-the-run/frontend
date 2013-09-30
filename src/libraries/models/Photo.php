@@ -609,6 +609,8 @@ class Photo extends Media
 
       // normally we delete the existing photos
       // in some cases we may have already done this (migration)
+      // since we have not updated the database yet we are deleting the old paths and not the new ones
+      //  new paths are stored in the db below by calling update() (see #1394 for misidentified bug)
       if(!isset($_POST['skipDeletes']) || empty($_POST['skipDeletes']))
       {
         $photo = $this->db->getPhoto($id);
@@ -620,11 +622,6 @@ class Photo extends Media
           $this->logger->info('Could not purge photo versions from the database');
           return false;
         }
-
-        // delete all photos from the original photo object (includes paths to existing photos)
-        // check if skipDeleteOriginal is passed in and remove from $photo and $attributes to preserve
-        if($skipOriginal === '1')
-          unset($photo['pathOriginal']);
 
         $delFilesResp = $this->fs->deletePhoto($photo);
         if(!$delFilesResp)
