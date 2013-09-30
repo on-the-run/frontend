@@ -238,6 +238,12 @@ class ApiPhotoController extends ApiBaseController
     // this extracts local variables $permission, $filter, $pageSize, etc
     extract($this->parseFilters($filterOpts));
     $db = getDb();
+
+    // on gallery sort by date uploaded, album date taken #1340
+    $filters['sortBy'] = 'dateUploaded,desc';
+    if(isset($filters['album']))
+      $filters['sortBy'] = 'dateTaken,asc';
+
     $photos = $db->getPhotos($filters, $pageSize);
 
     if(empty($photos))

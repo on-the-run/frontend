@@ -1879,14 +1879,15 @@ class DatabaseMySql implements DatabaseInterface
             $where = $this->buildWhere($where, sprintf("`dateUploaded`<'%s'", $this->_(strtotime($value))));
             break;
           case 'sortBy':
+            // default is dateTaken,desc
             if($value === 'dateTaken,desc')
-              $sortBy = 'ORDER BY dateSortByDay DESC';
+              $sortBy = 'ORDER BY dateTaken DESC';
             elseif($value === 'dateTaken,asc')
-              $sortBy = 'ORDER BY dateSortByDay ASC';
+              $sortBy = 'ORDER BY `dateTaken` ASC';
             elseif($value === 'dateUploaded,desc')
-              $sortBy = 'ORDER BY dateSortByDay DESC, dateUploaded ASC';
+              $sortBy = 'ORDER BY `dateUploaded` DESC';
             elseif($value === 'dateUploaded,asc')
-              $sortBy = 'ORDER BY dateSortByDay ASC, dateUploaded ASC';
+              $sortBy = 'ORDER BY `dateUploaded` ASC';
             else
               $sortBy = 'ORDER BY ' . $this->_(str_replace(',', ' ', $value));
             $field = $this->_(substr($value, 0, strpos($value, ',')));
