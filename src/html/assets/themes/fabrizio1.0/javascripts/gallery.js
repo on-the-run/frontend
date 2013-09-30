@@ -273,11 +273,10 @@ var Gallery = (function($) {
 
     // insert calendar icon
     currentDate = d.getYear()+'-'+d.getMonth()+'-'+d.getDay();
-    if(currentDate !== lastDate) {
-      if(breakOnDate)
-        parent.append(dateSeparator(item.dateTaken));
-      else
-        imageContainer.append(dateSeparator(item.dateTaken));
+    if(breakOnDate) {
+      parent.append(dateSeparator(item.dateTaken));
+    } else {
+      imageContainer.append(dateSeparator(item.dateTaken));
     }
     lastDate = currentDate;
 
@@ -309,9 +308,6 @@ var Gallery = (function($) {
 		},
 
 		showImages : function(photosContainer, realItems) {
-      if(typeof(breakOnDate) === 'undefined')
-        breakOnDate = TBX.util.enableBetaFeatures() && TBX.util.currentPage() === 'photos';
-
       // check if the batch queue is empty
       // we do this here to keep from having to call length for each photo, just for each page
       batchEmpty = OP.Batch.length() === 0;
