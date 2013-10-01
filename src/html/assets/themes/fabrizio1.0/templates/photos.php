@@ -6,7 +6,7 @@
       <?php $this->utility->safe($album['name']); ?>
       <small>
         (
-          <?php $this->utility->safe($album['count']); ?> photos
+          <?php number_format($this->utility->safe($album['count'])); ?> photos
           <?php if($this->user->isAdmin()) { ?>
             <span class="hide"> | <a href="#" class="shareAlbum share trigger" data-id="<?php $this->utility->safe($album['id']); ?>" title="Share this album"><i class="icon-share"></i> Share</a></span>
           <?php } ?>
@@ -15,9 +15,9 @@
       </small>
     </h4>
     <?php } else if(isset($tags)) { ?>
-      <h4><i class="icon-tags"></i> <?php $this->utility->safe(implode(', ', $tags)); ?> <small>(<?php $this->utility->safe($photos[0]['totalRows']); ?> photos &middot; <i class="icon-sort-by-order-alt" title="Photos sorted newest uploaded to oldest"></i>)</small></h4>
+      <h4><i class="icon-tags"></i> <?php $this->utility->safe(implode(', ', $tags)); ?> <small>(<?php number_format($this->utility->safe($photos[0]['totalRows'])); ?> photos &middot; <i class="icon-sort-by-order-alt" title="Photos sorted newest uploaded to oldest"></i>)</small></h4>
     <?php } else { ?>
-      <h4><i class="icon-picture"></i> Gallery <small>( <?php $this->utility->safe($photos[0]['totalRows']); ?> photos &middot; <i class="icon-sort-by-order-alt" title="Photos sorted newest uploaded to oldest"></i> )</small></h4>
+      <h4><i class="icon-picture"></i> Gallery <small>( <?php number_format($this->utility->safe($photos[0]['totalRows'])); ?> photos &middot; <i class="icon-sort-by-order-alt" title="Photos sorted newest uploaded to oldest"></i> )</small></h4>
     <?php } ?>
     <?php if(!empty($photos)) { ?>
       <script> var initData = <?php echo json_encode($photos); ?>; var filterOpts = <?php echo json_encode($options); ?>;</script>
