@@ -230,7 +230,8 @@
       var router = op.data.store.Router;
       this._releaseDocumentEvents();
       this._visible = false;
-      this.$el.fadeOut('fast');
+      if(this.$el)
+        this.$el.fadeOut('fast');
       router.navigate(this._path, {silent:true});
       return this;
     },

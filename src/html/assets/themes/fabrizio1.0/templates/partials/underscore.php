@@ -17,13 +17,17 @@
   </div>
 </script>
 <script type="tmpl/underscore" id="profile-photo-meta">
-  <img class="avatar profile-pic profile-photo" src="<%= photoUrl %>" <% if(photoUrl.search('gravatar.com') == -1) { %>title="Click the profile icon when mousing over any photo to set it as your profile photo." <% } %> />
+  <% if(photoUrl) { %>
+    <img class="avatar profile-pic profile-photo" src="<%= photoUrl %>" <% if(photoUrl.search('gravatar.com') == -1) { %>title="Click the profile icon when mousing over any photo to set it as your profile photo." <% } %> />
+  <% } %>
 </script>
 
 <script type="tmpl/underscore" id="user-badge-meta">
   <div class="tray-wrap">
     <span class="avatar">
-      <img class="avatar profile-pic profile-photo" src="<%= photoUrl %>" <% if(photoUrl.search('gravatar.com') == -1) { %>title="Click the profile icon when mousing over any photo to set it as your profile photo." <% } %> />
+      <% if(photoUrl) { %>
+        <img class="avatar profile-pic profile-photo" src="<%= photoUrl %>" <% if(photoUrl.search('gravatar.com') == -1) { %>title="Click the profile icon when mousing over any photo to set it as your profile photo." <% } %> />
+      <% } %>
     </span>
     <div class="tray">
       <div class="details">
