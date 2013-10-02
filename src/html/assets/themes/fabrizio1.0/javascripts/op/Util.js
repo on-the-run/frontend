@@ -3,7 +3,7 @@
     TBX = {};
 
   function Util() {
-    var enableBetaFeatures = false, currentPage = null;
+    var enableBetaFeatures = false, currentPage = null, fetchCache = {};
 
     this.currentPage = function(/*[set]*/) {
       if(arguments.length === 1)
@@ -18,7 +18,9 @@
     };
 
     this.fetchAndCache = function(src) {
-      $('<img />').attr('src', src).appendTo('body').css('display', 'none').on('load', function(ev) { $(ev.target).remove(); });
+      if(typeof(fetchCache[src]) === 'undefined')
+        $('<img />').attr('src', src).appendTo('body').css('display', 'none').on('load', function(ev) { $(ev.target).remove(); });
+      fetchCache[src] = 1;
     };
 
     // http://stackoverflow.com/questions/12662824/twitter-bootstrap-typeahead-multiple-values

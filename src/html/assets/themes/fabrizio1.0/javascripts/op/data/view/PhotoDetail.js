@@ -465,8 +465,20 @@
       
       OP.Util.makeRequest(endpoint, apiParams, function(response) {
         if( response.result ){
-          if( response.result.next ) model.set('next', response.result.next);
-          if( response.result.previous ) model.set('previous', response.result.previous);
+          var fetchSrcs = [];
+          if( response.result.next ) { 
+            model.set('next', response.result.next);
+            fetchSrcs.push(response.result.next[0]['path870x870']);
+            fetchSrcs.push(response.result.next[1]['path870x870']);
+          }
+          if( response.result.previous ) {
+            model.set('previous', response.result.previous);
+            fetchSrcs.push(response.result.previous[0]['path870x870']);
+            fetchSrcs.push(response.result.previous[1]['path870x870']);
+          }
+          if(fetchSrcs.length > 0) {
+            OP.Util.fire('preload:photos', fetchSrcs);
+          }
         }
         self._addMoreFromModel(model, fn);
       }, 'json', 'get');
