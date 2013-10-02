@@ -216,6 +216,12 @@
         $photo.css({'height': ( $(window).height() - this.$el.find('.bd').position().top )+'px'} );
       }
     },
+
+    isOpen: function() {
+      if(this.$el)
+        return true;
+      return false;
+    },
     
     show : function(item){
       this._initialize();
