@@ -75,7 +75,7 @@
 
 <script type="tmpl/underscore" id="profile-name-meta">
   <?php if($isAdmin) { ?>
-    <span class="name edit" title="Change display name"><i class="icon-pencil"></i> <%- name %></span>
+    <span class="name edit" title="Change display name"><i class="icon-pencil"></i> <span class="value"><%- name %></span></span>
   <?php } else { ?>
     <span class="name" ><%- name %></span>
   <?php } ?>
