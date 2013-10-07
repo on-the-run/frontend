@@ -114,6 +114,7 @@ class ApiUserController extends ApiBaseController
       return $this->notFound('Could not load user profile');
 
     $utilityObj = new Utility;
+    $permissionObj = new Permission;
 
     $photos = $this->api->invoke('/photos/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => 1)));
     $albums = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => 1)));
@@ -139,6 +140,7 @@ class ApiUserController extends ApiBaseController
     }
 
     $profile['isOwner'] = $this->user->isAdmin();
+    $profile['permission'] = $permissionObj->get();
 
     // should we include the viewer?
     if(isset($_GET['includeViewer']) && $_GET['includeViewer'] == '1')
