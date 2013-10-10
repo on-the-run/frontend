@@ -552,7 +552,7 @@ class Photo extends Media
 
     // to preserve json columns we have to do complete writes
     $currentPhoto = $this->db->getPhoto($id);
-    unset($currentPhoto['id']);
+    unset($currentPhoto['id'], $currentPhoto['tags'], $currentPhoto['albums']);
     $attributes = array_merge($currentPhoto, $attributes);
 
     $attributes = $this->whitelistAttributes($attributes);
