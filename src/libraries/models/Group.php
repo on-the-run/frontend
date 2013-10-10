@@ -86,6 +86,11 @@ class Group extends BaseModel
     return $res;
   }
 
+  public function getMembersAcrossGroups()
+  {
+    return $this->db->getGroupsMembers();
+  }
+
   public function undelete($id)
   {
     return $this->db->undeleteGroup($id);
