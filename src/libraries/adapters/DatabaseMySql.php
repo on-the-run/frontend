@@ -1795,6 +1795,47 @@ class DatabaseMySql implements DatabaseInterface
     $sql = substr($sql, 0, -1);
     $res = $this->db->execute($sql);
 
+    // update tag counts here instead of in a trigger #1342
+    $tagsForSql = array();
+    foreach($tags as $tag)
+      $tagsForSql[] = $this->_($tag);
+    $tagsForSql = sprintf("'%s'", implode("','", $tagsForSql));
+    // get public and private counts for all the tags
+    // private tag counts (omit permission column in WHERE clause to get all photos (private is everything))
+    $privateCounts = $this->db->all("SELECT et.`tag`, COUNT(*) AS _CNT
+      FROM `{$this->mySqlTablePrefix}photo` AS p INNER JOIN `{$this->mySqlTablePrefix}elementTag` AS et ON et.`element`=p.`id`
+      WHERE et.`owner`=:owner1 AND et.`tag` IN ({$tagsForSql}) AND p.`owner`=:owner2
+      GROUP BY et.`tag`", 
+      array(':owner1' => $this->owner, ':owner2' => $this->owner)
+    );
+    // public tag counts (include permission column in WHERE clause to get only public photos)
+    $publicCounts = $this->db->all("SELECT et.`tag`, COUNT(*) AS _CNT
+      FROM `{$this->mySqlTablePrefix}photo` AS p INNER JOIN `{$this->mySqlTablePrefix}elementTag` AS et ON et.`element`=p.`id`
+      WHERE et.`owner`=:owner1 AND et.`tag` IN ({$tagsForSql}) AND p.`owner`=:owner2 AND p.`permission`=:permission 
+      GROUP BY et.`tag`", 
+      array(':owner1' => $this->owner, ':owner2' => $this->owner, ':permission' => '1')
+    );
+
+    $tagCountSql = "UPDATE `{$this->mySqlTablePrefix}tag` ";
+    if(count($privateCounts) > 0)
+    {
+      $tagCountSql .= 'SET `countPrivate` = CASE `id` ';
+      foreach($privateCounts as $t)
+        $tagCountSql .= sprintf("WHEN '%s' THEN '%s' ", $t['tag'], $t['_CNT']);
+      $tagCountSql .= "ELSE `id` END WHERE `owner`=:owner AND `id` IN({$tagsForSql})";
+      $this->db->execute($tagCountSql, array(':owner' => $this->owner));
+    }
+    
+    $tagCountSql = "UPDATE `{$this->mySqlTablePrefix}tag` ";
+    if(count($publicCounts) > 0)
+    {
+      $tagCountSql .= 'SET `countPublic` = CASE `id` ';
+      foreach($publicCounts as $t)
+        $tagCountSql .= sprintf("WHEN '%s' THEN '%s' ", $t['tag'], $t['_CNT']);
+      $tagCountSql .= "ELSE `id` END WHERE `owner`=:owner AND `id` IN({$tagsForSql})";
+      $this->db->execute($tagCountSql, array(':owner' => $this->owner));
+    }
+
     return $res !== false;
   }
 
