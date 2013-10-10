@@ -92,6 +92,8 @@ class ApiAlbumController extends ApiBaseController
     if($albums === false)
       return $this->error('Could not retrieve albums', false);
 
+    $skipEmpty = isset($_GET['skipEmpty']) && $_GET['skipEmpty'] == 1 ? 1 : 0;
+
     // If the request is authenticated AND the user is not an admin then we have to descend into groups for permissions
     // Else we just leave the albums as is and pull counts based on the appropriate column
     if(getAuthentication()->isRequestAuthenticated() && !$this->user->isAdmin())
@@ -103,7 +105,6 @@ class ApiAlbumController extends ApiBaseController
       $totalRows = $albums[0]['totalRows'];
       $permissionObj = new Permission;
       $allowedAlbums = $permissionObj->allowedAlbums($permission);
-      $skipEmpty = isset($_GET['skipEmpty']) && $_GET['skipEmpty'] == 1 ? 1 : 0;
       foreach($albums as $key => $alb)
       {
         // if an album has no public photos then we check to see if this user has permission to view it
