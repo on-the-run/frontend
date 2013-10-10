@@ -60,6 +60,11 @@ class Group extends BaseModel
     return $this->db->getGroups($email);
   }
 
+  public function getGroupsByMember($email)
+  {
+    return $this->db->getGroupMemberGroups($email);
+  }
+
   public function manageMembers($id, $emails, $action)
   {
     foreach($emails as $k => $v) 

@@ -9,99 +9,126 @@ body.manage {
     }
   }
 
-  p.blurb {
-    i {
-      color: @fnt_light_color;
-      font-size:larger;
+  .sections {
+    min-height:200px;
+    .groups-members {
+      ul.members {
+        li{ 
+          padding:0 0 10px 0;
+          .photo {
+            width: 32px;
+            margin-right:15px;
+            text-align:center;
+            img{ 
+              width:32px;
+              height:32px;
+              border-radius: 4px;
+            }
+            font-size:32px;
+            line-height:32px;
+          }
+          .email {
+            line-height:32px;
+            vertical-align:middle;
+          }
+        }
+      }
     }
-    vertical-align: middle;
-    font-size: smaller;
-    font-style:italic;
-  }
 
-  form {
-    small {
+    p.blurb {
       i {
         color: @fnt_light_color;
         font-size:larger;
       }
-      display:block;
-      font-style:italic;
-      font-size:smaller;
-    }
-  }
-
-  table.groups {
-    .description {
+      vertical-align: middle;
       font-size: smaller;
-      margin-left:15px;
-    }
-    td.actions {
-      vertical-align:middle;
-    }
-  }
-
-  div.albums {
-    > div {
-      padding-bottom: 60px;
+      font-style:italic;
     }
 
-    @import "stack";
-    @import "cover";
-    .cover {
-      margin:auto;
+    form {
+      small {
+        i {
+          color: @fnt_light_color;
+          font-size:larger;
+        }
+        display:block;
+        font-style:italic;
+        font-size:smaller;
+      }
     }
 
-    h4.name {
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow:hidden;
-      width:100%;
+    table.groups {
+      .description {
+        font-size: smaller;
+        margin-left:15px;
+      }
+      td.actions {
+        vertical-align:middle;
+      }
     }
-  }
 
-  div.album-header {
-    .checkboxes {
-      width:auto;
-      display:inline-block;
-      overflow:hidden;
-      white-space:nowrap;
-      vertical-align:middle;
-      .inner {
-        width:0;
+    div.albums {
+      > div {
+        padding-bottom: 60px;
+      }
+
+      @import "stack";
+      @import "cover";
+      .cover {
+        margin:auto;
+      }
+
+      h4.name {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow:hidden;
+        width:100%;
+      }
+    }
+
+    div.album-header {
+      .checkboxes {
+        width:auto;
         display:inline-block;
         overflow:hidden;
         white-space:nowrap;
+        vertical-align:middle;
+        .inner {
+          width:0;
+          display:inline-block;
+          overflow:hidden;
+          white-space:nowrap;
+        }
       }
     }
-  }
 
-  div.userList {
-    ul {
-      li {
-        padding:0 0 5px;
+    div.userList {
+      ul {
+        li {
+          padding:0 0 5px;
+        }
       }
     }
-  }
 
-  div.group-list {
-    p {
-      display:block;
-      margin-left:20px;
+    div.group-list {
+      p {
+        display:block;
+        margin-left:20px;
+      }
     }
-  }
-  div.delete-actions {
-    text-align:right;
-    padding-right:20px;
-  }
-  div.empty {
-    text-align:center;
-    h3 {
-      margin: 30px 0 20px;
-      font-size:40px;
+    div.delete-actions {
+      text-align:right;
+      padding-right:20px;
     }
-    p {
-      font-size:25px;
+    div.empty {
+      text-align:center;
+      h3 {
+        margin: 30px 0 20px;
+        font-size:40px;
+      }
+      p {
+        font-size:25px;
+      }
     }
   }
 }

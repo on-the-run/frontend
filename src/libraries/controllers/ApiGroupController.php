@@ -116,6 +116,13 @@ class ApiGroupController extends ApiBaseController
     return $this->success('Members across groups', $emails);
   }
 
+  public function memberView($email)
+  {
+    getAuthentication()->requireAuthentication();
+    $groups = $this->group->getGroupsByMember($email);
+    return $this->success('Groups for this user', $groups);
+  }
+
   /**
     * Undelete a group
     *

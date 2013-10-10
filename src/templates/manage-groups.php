@@ -1,8 +1,9 @@
 <div class="row">
   <div class="span2">
     <ul class="nav nav-tabs nav-stacked affix sub-navigation">
-      <li class="<?php if($page === 'group-list') { ?>active <?php } ?>"><a href="/manage/groups/list"><i class="icon-group"></i> Manage Groups</a></li>
-      <li class="<?php if($page === 'administrators') { ?>active <?php } ?>"><a href="/manage/administrators"><i class="icon-user-md"></i> Administrators</a></li>
+      <li class="<?php if($page === 'group-list') { ?>active <?php } ?>"><a href="/manage/groups/list"><i class="icon-fixed-width icon-group"></i> Groups</a></li>
+      <li class="<?php if($page === 'groups-members') { ?>active <?php } ?>"><a href="/manage/groups/members"><i class="icon-fixed-width icon-user"></i> Group Members</a></li>
+      <li class="<?php if($page === 'administrators') { ?>active <?php } ?>"><a href="/manage/administrators"><i class="icon-fixed-width icon-user-md"></i> Administrators</a></li>
     </ul>
   </div>
   <div class="span10 sections">
@@ -12,7 +13,7 @@
           <form method="post" action="/manage/settings">
             <h2>Collaborators</h2>
             <p class="blurb">
-              <i class="icon-info-sign"></i> Enter email addresses for others you'd like to collaborate with you. These users will have full access to your account. They can log in using Mozilla Persona.
+              <i class="icon-info-sign"></i> Enter email addresses for others you'd like to grant <strong><em>full</em></strong> access to your account. They'll receive an email to set a password.
             </p>
             <?php for($i=0; $i<4; $i++) { ?>
               <div><input type="text" name="admins[<?php echo $i; ?>]" <?php if(isset($admins[$i])) { ?> value="<?php $this->utility->safe($admins[$i]); ?>" <?php } ?> placeholder="user<?php echo ($i+1); ?>@example.com"></div>
@@ -22,6 +23,49 @@
             <input type="hidden" name="skipDefaults" value="1">
             <input type="hidden" name="r" value="/manage/administrators">
           </form>
+        </div>
+      </div>
+    <?php } elseif($page === 'groups-members') { ?>
+      <div class="row groups-members">
+        <div class="span10">
+          <h2>Group Members</h2>
+          <p class="blurb"><i class="icon-info-sign"></i> This is a list of users you've granted access across all of your groups.</p>
+          <?php if(empty($members)) { ?>
+            You haven't added any users to your groups.
+          <?php } else { ?>
+            <ul class="members unstyled">
+              <?php foreach($members as $memb) { ?>
+                <li>
+                  <div class="row">
+                    <div class="span1 photo">
+                      <?php if(isset($memb['photo']) && !empty($memb['photo'])) { ?>
+                        <img src="<?php $this->utility->safe($memb['photo']); ?>">
+                      <?php } else { ?>
+                        <i class="icon-user"></i>
+                      <?php } ?>
+                    </div>
+                    <div class="span9 email"><a href="/manage/groups/member/<?php $this->utility->safe(urlencode($memb['email'])); ?>/view"><?php $this->utility->safe($memb['email']); ?></a></div>
+                  </div>
+                </li>
+              <?php } ?>
+            </ul>
+          <?php } ?>
+        </div>
+      </div>
+    <?php } elseif($page === 'groups-member') { ?>
+      <div class="row groups-member">
+        <div class="span10">
+          <h2><?php $this->utility->safe($email); ?></h2>
+          <p class="blurb"><i class="icon-info-sign"></i> Below is a list of all the groups this user is a member of.</p>
+          <?php if(empty($groups)) { ?>
+            This user isn't a member of any groups.
+          <?php } else { ?>
+            <ul class="groups unstyled">
+              <?php foreach($groups as $group) { ?>
+                <li><a href="/manage/group/<?php $this->utility->safe($group['id']); ?>/view"><?php $this->utility->safe($group['name']); ?></a></li>
+              <?php } ?>
+            </ul>
+          <?php } ?>
         </div>
       </div>
     <?php } elseif($page === 'group-list') { ?>

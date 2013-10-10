@@ -570,6 +570,25 @@ class DatabaseMySql implements DatabaseInterface
   }
 
   /**
+    * Get all groups a member belongs to
+    *
+    * @return mixed Array on success, FALSE on failure
+    */
+  public function getGroupMemberGroups($email)
+  {
+    $groupsRes = $this->db->all("SELECT g.* 
+      FROM `{$this->mySqlTablePrefix}groupMember` AS gm INNER JOIN `{$this->mySqlTablePrefix}group` AS g ON gm.`group`=g.`id` 
+      WHERE g.`owner`=:owner1 AND gm.`owner`=:owner2 AND gm.email=:email", 
+      array(':owner1' => $this->owner, ':owner2' => $this->owner, ':email' => $email)
+    );
+
+    $groups = array();
+    foreach($groupsRes as $group)
+      $groups[] = $this->normalizeGroup($group);
+    return $groups;
+  }
+
+  /**
     * Retrieve groups from the database optionally filter by member (email)
     *
     * @param string $email email address to filter by
@@ -638,11 +657,23 @@ class DatabaseMySql implements DatabaseInterface
     if(!$members)
       return false;
 
-    $emails = array();
+    $emailsForSql = array();
     foreach($members as $m)
-      $emails[] = $m['email'];
-    return $emails;
+      $emailsForSql[] = $this->_($m['email']);
 
+    $emailsForSql = sprintf("'%s'", implode("','", $emailsForSql));
+    $userProfiles = $this->db->all("SELECT `id`, `extra` FROM `{$this->mySqlTablePrefix}user` WHERE `id` IN ({$emailsForSql})");
+
+    $profiles = array();
+    foreach($userProfiles as $profile)
+    {
+      $profile = $this->normalizeUser($profile);
+      $profiles[$profile['id']] = array('email' => $profile['id']);
+      if(isset($profile['attrprofilePhoto']))
+        $profiles[$profile['id']]['photo'] = $profile['attrprofilePhoto'];
+    }
+    ksort($profiles);
+    return array_values($profiles); // array_values returns a numerically indexed list
   }
 
   /**

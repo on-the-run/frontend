@@ -181,6 +181,7 @@ $apiObj->post('/?v?[1-2]?/group/([a-zA-Z0-9]+)/member/(add|remove).json', array(
 $apiObj->get('/?v?[1-2]?/group/([a-zA-Z0-9]+)/view.json', array('ApiGroupController', 'view'), EpiApi::external);
 $apiObj->get('/?v?[1-2]?/groups/list.json', array('ApiGroupController', 'list_'), EpiApi::external);
 $apiObj->get('/?v?[1-2]?/groups/members.json', array('ApiGroupController', 'members'), EpiApi::external);
+$apiObj->get('/?v?[1-2]?/groups/member/(.*)/view.json', array('ApiGroupController', 'memberView'), EpiApi::external);
 
 /*
  * Plugin endpoints follow the same convention.

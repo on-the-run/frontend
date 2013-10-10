@@ -69,6 +69,24 @@ class ManageController extends BaseController
     $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));
   }
 
+  public function groupsMember($email)
+  {
+    $groupsResp = $this->api->invoke(sprintf('/groups/member/%s/view.json', $email));
+    $params = array('crumb' => $this->session->get('crumb'), 'page' => 'groups-member', 'email' => $email, 'groups' => $groupsResp['result']);
+    $bodyTemplate = sprintf('%s/manage-groups.php', $this->config->paths->templates);
+    $body = $this->template->get($bodyTemplate, $params);
+    $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));
+  }
+
+  public function groupsMembers()
+  {
+    $membersResp = $this->api->invoke('/groups/members.json');
+    $params = array('crumb' => $this->session->get('crumb'), 'page' => 'groups-members', 'members' => $membersResp['result']);
+    $bodyTemplate = sprintf('%s/manage-groups.php', $this->config->paths->templates);
+    $body = $this->template->get($bodyTemplate, $params);
+    $this->theme->display('template.php', array('body' => $body, 'page' => 'manage'));
+  }
+
   public function groupView($id)
   {
     $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0')));
