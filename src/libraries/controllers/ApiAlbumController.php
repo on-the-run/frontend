@@ -103,18 +103,27 @@ class ApiAlbumController extends ApiBaseController
       $totalRows = $albums[0]['totalRows'];
       $permissionObj = new Permission;
       $allowedAlbums = $permissionObj->allowedAlbums($permission);
+      $skipEmpty = isset($_GET['skipEmpty']) && $_GET['skipEmpty'] == 1 ? 1 : 0;
       foreach($albums as $key => $alb)
       {
         // if an album has no public photos then we check to see if this user has permission to view it
-        if($alb['countPublic'] === 0 && !in_array($alb['id'], $allowedAlbums))
+        if(($skipEmpty && $alb['countPublic'] == 0) || !in_array($alb['id'], $allowedAlbums))
         {
           unset($albums[$key]);
           $totalRows--;
         }
         else
         {
-          $albums[$key]['count'] = $alb['countPublic'];
-          unset($albums[$key]['countPublic'], $albums[$key]['countPrivate']);
+          if($skipEmpty && $alb['countPublic'] == 0)
+          {
+            unset($albums[$key]);
+            $totalRows--;
+          }
+          else
+          {
+            $albums[$key]['count'] = $alb['countPublic'];
+            unset($albums[$key]['countPublic'], $albums[$key]['countPrivate']);
+          }
         }
       }
       // since we might remove elements we need to rekey $albums
@@ -126,8 +135,16 @@ class ApiAlbumController extends ApiBaseController
       $albumCountKey = $this->user->isAdmin() ? 'countPrivate' : 'countPublic';
       foreach($albums as $key => $val)
       {
-        $albums[$key]['count'] = $val[$albumCountKey];
-        unset($albums[$key]['countPublic'], $albums[$key]['countPrivate']);
+        if($skipEmpty && $val[$albumCountKey] == 0)
+        {
+          unset($albums[$key]);
+          $totalRows--;
+        }
+        else
+        {
+          $albums[$key]['count'] = $val[$albumCountKey];
+          unset($albums[$key]['countPublic'], $albums[$key]['countPrivate']);
+        }
       }
     }
 
