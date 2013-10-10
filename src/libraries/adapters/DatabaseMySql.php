@@ -1821,7 +1821,7 @@ class DatabaseMySql implements DatabaseInterface
     {
       $tagCountSql .= 'SET `countPrivate` = CASE `id` ';
       foreach($privateCounts as $t)
-        $tagCountSql .= sprintf("WHEN '%s' THEN '%s' ", $t['tag'], $t['_CNT']);
+        $tagCountSql .= sprintf("WHEN '%s' THEN '%s' ", $this->_($t['tag']), $t['_CNT']);
       $tagCountSql .= "ELSE `id` END WHERE `owner`=:owner AND `id` IN({$tagsForSql})";
       $this->db->execute($tagCountSql, array(':owner' => $this->owner));
     }
@@ -1831,7 +1831,7 @@ class DatabaseMySql implements DatabaseInterface
     {
       $tagCountSql .= 'SET `countPublic` = CASE `id` ';
       foreach($publicCounts as $t)
-        $tagCountSql .= sprintf("WHEN '%s' THEN '%s' ", $t['tag'], $t['_CNT']);
+        $tagCountSql .= sprintf("WHEN '%s' THEN '%s' ", $this->_($t['tag']), $t['_CNT']);
       $tagCountSql .= "ELSE `id` END WHERE `owner`=:owner AND `id` IN({$tagsForSql})";
       $this->db->execute($tagCountSql, array(':owner' => $this->owner));
     }
