@@ -624,6 +624,28 @@ class DatabaseMySql implements DatabaseInterface
   }
 
   /**
+    * Get all members across all groups
+    *
+    * @return mixed Array on success, FALSE on failure
+    */
+  public function getGroupsMembers()
+  {
+    $members = $this->db->all($sql = "SELECT DISTINCT `email` 
+      FROM `{$this->mySqlTablePrefix}groupMember` 
+      WHERE `owner`=:owner AND 
+        `group` IN (SELECT `id` FROM `group` WHERE `owner`=:gOwner AND `active`=1)", array(':owner' => $this->owner, ':gOwner' => $this->owner));
+
+    if(!$members)
+      return false;
+
+    $emails = array();
+    foreach($members as $m)
+      $emails[] = $m['email'];
+    return $emails;
+
+  }
+
+  /**
     * Get a photo specified by $id
     *
     * @param string $id ID of the photo to retrieve
@@ -782,6 +804,21 @@ class DatabaseMySql implements DatabaseInterface
     }
 
     return $photos;
+  }
+
+  /**
+    * Get plan details
+    *
+    * @param string $id plan to be retrieved
+    * @return mixed Array on success, FALSE on failure
+    */
+  public function getPlan($id)
+  {
+    $plan = $this->db->one('SELECT * FROM `opme` WHERE `id` = :id', array(':id' => sprintf('plan-%s', $id)));
+    if(!$plan)
+      return false;
+
+    return json_decode($plan['data']);
   }
 
   /**
