@@ -86,9 +86,9 @@ class PermissionTest extends PHPUnit_Framework_TestCase
   {
     $visitorPermission = array(
       'C' => array('z','y'),
-      'R' => false,
+      'R' => array(),
       'U' => array('y'),
-      'D' => false
+      'D' => array()
     );
 
     $userGroups = array(

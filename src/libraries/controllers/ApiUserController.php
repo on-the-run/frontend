@@ -140,7 +140,6 @@ class ApiUserController extends ApiBaseController
     }
 
     $profile['isOwner'] = $this->user->isAdmin();
-    $profile['permission'] = $permissionObj->get();
 
     // should we include the viewer?
     if(isset($_GET['includeViewer']) && $_GET['includeViewer'] == '1')
@@ -171,6 +170,7 @@ class ApiUserController extends ApiBaseController
           $profile['viewer'] = array('id' => null, 'photoUrl' => $this->user->getAvatarFromEmail(100, null), 'name' => User::displayNameDefault);
         }
       }
+      $profile['viewer']['permission'] = $permissionObj->get();
     }
 
     return $this->success('User profile', $profile);

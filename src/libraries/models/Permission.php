@@ -63,6 +63,10 @@ class Permission extends BaseModel
       $groups = $this->db->getGroupsByUser($email);
       if(!empty($groups))
       {
+        // if the user is in at least one group then instead of false the default is an empty array
+        foreach($permissions as $k => $p)
+          $permissions[$k] = array();
+
         foreach($groups as $group)
         {
           // loop over each album (the key) and it's permissions {C: , R: , U: , D: }
@@ -75,11 +79,7 @@ class Permission extends BaseModel
               {
                 //  we only add the permission if it's true as we default to no permissions
                 if($value)
-                {
-                  if(!is_array($permissions[$label]))
-                    $permissions[$label] = array();
                   $permissions[$label][] = $albumId;
-                }
               }
             }
           }
