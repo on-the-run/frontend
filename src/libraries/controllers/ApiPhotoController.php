@@ -722,7 +722,7 @@ class ApiPhotoController extends ApiBaseController
     if($getActions)
       $photo = $db->getPhotoWithActions($id);
     else
-      $photo = $db->getPhoto($id);
+      $photo = $this->photo->getPhoto($id);
 
     $optionsArr = array();
     if(!empty($options))
@@ -807,7 +807,7 @@ class ApiPhotoController extends ApiBaseController
         if($getActions)
           $photo = $db->getPhotoWithActions($id);
         else
-          $photo = $db->getPhoto($id);
+          $photo = $this->photo->getPhoto($id);
 
         $photo = $this->pruneSizes($photo, $sizes);
       }

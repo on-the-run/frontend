@@ -355,6 +355,16 @@ class PhotoTest extends PHPUnit_Framework_TestCase
     $this->assertFalse($res);
   }
 
+  public function testEnforceDataTypes()
+  {
+    $data = array('id' => 'string', 'host' => 1, 'latitude' => '1.2345', 'longitude' => 1);
+    $dataEnforced = $this->photo->enforceDataTypes($data);
+    $this->assertEquals('string', $dataEnforced['id'], 'String not left alone');
+    $this->assertEquals('1', $dataEnforced['host'], 'Int not converted to string');
+    $this->assertEquals(1.2345, $dataEnforced['latitude'], 'String not converted to float');
+    $this->assertEquals(1.0, $dataEnforced['longitude'], 'Int not converted to float');
+  }
+
   public function testGenerateCustomKey()
   {
     $res = $this->photo->generateCustomKey(10, 15, 'CR');

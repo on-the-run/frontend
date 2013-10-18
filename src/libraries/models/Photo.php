@@ -436,6 +436,17 @@ class Photo extends Media
   }
 
   /**
+    * Get a photo from the db and enforce the data types
+    *
+    * @param string Photo id
+    * @return array
+    */
+  public function getPhoto($id)
+  {
+    return $this->enforceDataTypes($this->db->getPhoto($id));
+  }
+
+  /**
     * Calculate the width and height of a scaled photo
     *
     * @param int $originalWidth The width of the original photo.
@@ -746,6 +757,37 @@ class Photo extends Media
 
     $this->logger->warn("Photo ({$id}) could NOT be stored to the file system");
     return false;
+  }
+
+  /**
+    * Generates a path for a custom version of a photo.
+    * This defines in a deterministic way what the URL for this version of the photo will be.
+    *
+    * @param array $photo photo object to enforce data types on
+    * @return array photo object cast to types
+    */
+  public function enforceDataTypes($photo)
+  {
+    $_ = array('int' => 'intval', 'float' => 'floatval', 'string' => 'strval', 'boolean' => 'boolval');
+    $__ = array(
+      'id' => 'string', 
+      'url' => 'string',
+      'host' => 'string',
+      'title' => 'string',
+      'description' => 'string',
+      //'tags' => array
+      'size' => 'int',
+      'width' => 'int',
+      'latitude' => 'float',
+      'longitude' => 'float'
+    );
+
+    foreach($photo as $k => $v)
+    {
+      if(isset($__[$k]) && $v !== null)
+        $photo[$k] = call_user_func($_[$__[$k]], $v);
+    }
+    return $photo;
   }
 
   /**
