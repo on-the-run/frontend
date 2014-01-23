@@ -482,6 +482,27 @@ class Photo extends BaseModel
     return false;
   }
 
+   /**
+    * Extracts the image size from a RAW file (identified by mimetype 'image/tiff'.
+    * Requires exiftool
+    * We have to do this because getimagesize(raw_file) returns the size of the 
+    *   embedded thumbnail.
+    * Returns [width, height]
+    *
+    * @param $photo Path to the photo.
+    * @return array
+    */
+  private function getImageSizeFromTiff($photo)
+  {
+    if(!is_executable($this->config->modules->exiftool))
+      return getimagesize($photo);
+
+    $cmd = sprintf('%s %s | egrep %s | awk %s', $this->config->modules->exiftool, escapeshellarg($photo), escapeshellarg('^Image Size +:'), escapeshellarg('{print $4}'));
+    $size = trim(exec($cmd));
+    return explode('x', $size);
+  }
+
+
   /**
     * Reads exif data from a photo.
     *
@@ -943,6 +964,16 @@ class Photo extends BaseModel
     return false;
   }
 
+  private function convertBaseToJpegIfRaw($localFileCopy)
+  {
+    if(get_mime_type($localFileCopy) !== 'image/tiff')
+      return;
+
+    if(is_executable($this->config->modules->ufraw))
+      exec($sh = sprintf('%s %s --noexif --out-type=jpeg --output=%s --overwrite', $this->config->modules->ufraw, escapeshellarg($localFileCopy), escapeshellarg($localFileCopy)));
+  }
+
+
   /**
     * Generates a path for a custom version of a photo.
     * This defines in a deterministic way what the URL for this version of the photo will be.
@@ -1072,6 +1103,7 @@ class Photo extends BaseModel
     $this->logger->info("Making a local copy of the uploaded image. {$localFile} to {$localFileCopy}");
     copy($localFile, $localFileCopy);
 
+    $this->convertBaseToJpegIfRaw($localFileCopy);
     $this->autoRotate($localFileCopy, $allowAutoRotate);
     
     $baseImage = $this->image->load($localFileCopy);
