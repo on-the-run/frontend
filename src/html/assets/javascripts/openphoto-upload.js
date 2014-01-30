@@ -34,10 +34,14 @@ OPU = (function() {
             keep_droptext : true,
 
             // Specify what files to browse for
-            filters : [
-                {title : "Photos", extensions : "jpg,jpeg,gif,png"},
-                {title : "Videos", extensions : "mov,mp4,webm,ogg"}
-            ],
+            filters : (function() {
+              var _ = [
+                  {title : "Photos", extensions : "jpg,jpeg,gif,png"},
+              ];
+              if(typeof OP.Util.config.enabledVideo !== "undefined" && OP.Util.config.enabledVideo)
+                _.push({title : "Videos", extensions : "mov,mp4,webm,ogg"});
+              return _;
+            })(),
 
             // Flash settings
             flash_swf_url : 'plupload.flash.swf',
