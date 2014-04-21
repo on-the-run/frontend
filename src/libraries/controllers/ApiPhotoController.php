@@ -1,4 +1,5 @@
 <?php
+
 /**
   * Photo controller for API endpoints
   *
