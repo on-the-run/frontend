@@ -218,7 +218,29 @@ class PhotoController extends BaseController
     $this->theme->display('template.php', array('body' => $body, 'page' => 'upload'));
   }
 
-  /**
+/*
+ modified the upload function into resize function 
+   public function upload()
+  {
+    getAuthentication()->requireAuthentication();
+    $userObj = new User;
+    if(!$userObj->isAdmin())
+    {
+      $this->route->run('/error/403');
+      return;
+    }
+    $this->theme->setTheme(); // defaults
+    $crumb = $this->session->get('crumb');
+    $template = sprintf('%s/upload.php', $this->config->paths->templates);
+    $groupsResp = $this->api->invoke('/groups/list.json');
+    $albumsResp = $this->api->invoke('/albums/list.json', EpiRoute::httpGet, array('_GET' => array('pageSize' => '0')));
+    $preferences = array('permission' => $userObj->getAttribute('stickyPermission'));
+    $body = $this->template->get($template, array('crumb' => $crumb, 'groups' => $groupsResp['result'], 'albums' => $albumsResp['result'], 'licenses' => $this->utility->getLicenses($userObj->getAttribute('stickyLicense')), 'preferences' => $preferences));
+    $this->theme->display('template.php', array('body' => $body, 'page' => 'upload'));
+  } 
+*/
+
+/**
     * Display the upload form for photos.
     *
     * @return string HTML

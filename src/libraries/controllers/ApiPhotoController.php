@@ -13,13 +13,36 @@ class ApiPhotoController extends ApiBaseController
     *
     * @return void
     */
-  public function __construct()
+  /*
+public function __construct()
   {
     parent::__construct();
     $this->photo = new Photo;
     $this->tag = new Tag;
     $this->user = new User;
   }
+*/
+
+//Xin
+public function __construct($params = null)
+  {
+    parent::__construct();
+    $this->photo = new Photo;
+    $this->tag = new Tag;
+    $this->user = new User;
+
+
+    if(isset($params['image']))
+      $this->image = $params['image'];
+    else
+      $this->image = getImage();
+
+
+    if(isset($params['config']))
+      $this->config = $params['config'];
+  }
+
+
 
   /**
     * Delete a photo specified by the ID.
@@ -436,7 +459,7 @@ class ApiPhotoController extends ApiBaseController
       unset($attributes['crumb']);
     if(isset($attributes['returnSizes']))
     {
-      $returnSizes = implode(',', array_unique((array)explode(',', $attributes['returnSizes'])));
+      $returnSizes = implode(',', array_unique((array)explode(',', $attributes['returnSizes']))); //return a string 
       unset($attributes['returnSizes']);
     }
 
@@ -578,6 +601,139 @@ class ApiPhotoController extends ApiBaseController
     return $this->success('Photos uploaded successfully', array('tpl' => $body, 'data' => $params));
   }
 
+
+//modified by Xin
+   
+  public function resize()
+  {
+    getAuthentication()->requireAuthentication();
+    getAuthentication()->requireCrumb();
+    $httpObj = new Http;
+    $attributes = $_REQUEST;
+
+    $this->plugin->invoke('onPhotoUpload');
+
+    // this determines where to get the photo from and populates $localFile and $name
+    extract($this->parsePhotoFromRequest());
+
+    // check if file type is valid
+    $utility = new Utility;
+    if(!$utility->isValidMimeType($localFile))
+    {
+      $this->logger->warn(sprintf('Invalid mime type for %s', $localFile));
+      unlink($localFile);
+      return $this->error('Invalid mime type', false);;
+    }
+
+    // TODO put this in a whitelist function (see replace())
+    if(isset($attributes['__route__']))
+      unset($attributes['__route__']);
+    if(isset($attributes['photo']))
+      unset($attributes['photo']);
+    if(isset($attributes['crumb']))
+      unset($attributes['crumb']);
+    if(isset($attributes['returnSizes']))
+    {
+      $returnSizes = implode(',', array_unique((array)explode(',', $attributes['returnSizes']))); //return a string 
+      unset($attributes['returnSizes']);
+    }
+
+    $photoId = false;
+
+    $attributes['hash'] = sha1_file($localFile);
+    // set default to config and override with parameter
+    $allowDuplicate = $this->config->site->allowDuplicate;
+    if(isset($attributes['allowDuplicate']))
+      $allowDuplicate = $attributes['allowDuplicate'];
+
+    // jmathai - check where this gets set
+    if(isset($returnSizes))
+    {
+      $sizes = (array)explode(',', $returnSizes);
+      if(!in_array('100x100xCR', $sizes))
+        $sizes[] = '100x100xCR';
+    }
+    else
+    {
+      $sizes = array('100x100xCR');
+    }
+
+    if($allowDuplicate == '0')
+    {
+      $hashResp = $this->api->invoke("/{$this->apiVersion}/photos/list.json", EpiRoute::httpGet, array('_GET' => array('hash' => $attributes['hash'], 'returnSizes' => implode(',', $sizes))));
+      // the second condition is for backwards compatability between v2 and v1. See #1086
+      if(!empty($hashResp['result']) && $hashResp['result'][0]['totalRows'] > 0)
+      {
+        unlink($localFile);
+        return $this->conflict('This photo already exists based on a sha1 hash. To allow duplicates pass in allowDuplicate=1', $hashResp['result'][0]);
+      }
+    }
+//    $photoId = $this->photo->upload($localFile, $name, $attributes);
+//Xin
+//here is the upload function including the resizing part. separate it!
+
+    $baseImage = $this->image->load($localFile);
+
+    $baseImage->scale($this->config->photos->baseSize, $this->config->photos->baseSize);
+
+    $baseImage->write($localFileCopy);
+    $uploaded = $this->fs->putPhotos(
+      array(
+        array($localFile => array($paths['pathOriginal'], $dateTaken)),
+        array($localFileCopy => array($paths['pathBase'], $dateTaken))
+      )
+    );
+
+
+//above
+
+    if($photoId)
+    {
+      if(isset($attributes['albums']))
+        $this->updateAlbums($attributes['albums'], $photoId);
+
+      foreach($sizes as $size)
+      {
+        $options = $this->photo->generateFragmentReverse($size);
+        $hash = $this->photo->generateHash($photoId, $options['width'], $options['height'], $options['options']);
+        $this->photo->generate($photoId, $hash, $options['width'], $options['height'], $options['options']);
+      }
+
+      $apiResp = $this->api->invoke("/{$this->apiVersion}/photo/{$photoId}/view.json", EpiRoute::httpGet, array('_GET' => array('returnSizes' => implode(',', $sizes))));
+      $photo = $apiResp['result'];
+      $permission = isset($attributes['permission']) ? $attributes['permission'] : 0;
+
+      if($photo)
+      {
+        $webhookApi = $this->api->invoke("/{$this->apiVersion}/webhooks/photo.upload/list.json", EpiRoute::httpGet);
+        if(!empty($webhookApi['result']) && is_array($webhookApi['result']))
+        {
+          $photoAsArgs = $photo;
+          $photoAsArgs['tags'] = implode(',', $photoAsArgs['tags']);
+          foreach($webhookApi['result'] as $key => $hook)
+          {
+            $httpObj->fireAndForget($hook['callback'], 'POST', $photoAsArgs);
+            $this->logger->info(sprintf('Webhook callback executing for photo.upload: %s', $hook['callback']));
+          }
+        }
+
+        $this->api->invoke(
+          "/{$this->apiVersion}/activity/create.json", 
+          EpiRoute::httpPost, 
+          array('_POST' => array('elementId' => $photoId, 'type' => 'photo-upload', 'data' => $photo, 'permission' => $permission))
+        );
+      }
+
+      $this->plugin->setData('photo', $photo);
+      $this->plugin->invoke('onPhotoUploaded');
+
+      $this->user->setAttribute('stickyPermission', $permission);
+      $this->user->setAttribute('stickyLicense', $photo['license']);
+      return $this->created("Photo {$photoId} uploaded successfully", $photo);
+    }
+
+    return $this->error('File upload failure', false);
+  }
   /**
     * Update the data associated with the photo in the remote data store.
     * Parameters to be updated are in _POST

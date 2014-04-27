@@ -800,7 +800,9 @@ class Photo extends BaseModel
     */
   public function upload($localFile, $name, $attributes = array())
   {
-    // check if file type is valid
+  
+  //if the input file type is jpg/jpeg/gif/png then return true otherwise return false.
+  // check if file type is valid
     if(!$this->utility->isValidMimeType($localFile))
     {
       $this->logger->warn(sprintf('Invalid mime type for %s', $localFile));
@@ -827,6 +829,7 @@ class Photo extends BaseModel
     else
       $dateTaken = time();
 
+   //copy and resize the base image then give original pic and resized pic to fs. return status, path, the copy 
     $resp = $this->createAndStoreBaseAndOriginal($name, $localFile, $dateTaken, $allowAutoRotate);
     $paths = $resp['paths'];
 
