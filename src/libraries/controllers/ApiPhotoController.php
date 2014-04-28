@@ -503,10 +503,11 @@ public function __construct($params = null)
 
       foreach($sizes as $size)
       {
-        $options = $this->photo->generateFragmentReverse($size);
+        $options = $this->photo->generateFragmentReverse($size);  //set up width, height from argc options
         $hash = $this->photo->generateHash($photoId, $options['width'], $options['height'], $options['options']);
         $this->photo->generate($photoId, $hash, $options['width'], $options['height'], $options['options']);
       }
+
 
       $apiResp = $this->api->invoke("/{$this->apiVersion}/photo/{$photoId}/view.json", EpiRoute::httpGet, array('_GET' => array('returnSizes' => implode(',', $sizes))));
       $photo = $apiResp['result'];

@@ -298,7 +298,7 @@ class Photo extends BaseModel
       if(strlen($v) == 0)
         unset($args[$k]);
     }
-    $args[] = $this->config->secrets->secret;
+    $args[] = $this->config->secrets->secret;  //Xin
     return substr(sha1(implode('.', $args)), 0, 5);
   }
 
@@ -1078,7 +1078,7 @@ class Photo extends BaseModel
       $this->logger->warn('Could not load image, possibly an invalid image file.');
       return false;
     }
-    $baseImage->scale($this->config->photos->baseSize, $this->config->photos->baseSize);
+    $baseImage->scale($this->config->photos->baseSize, $this->config->photos->baseSize);  //scale here  load the config
     $baseImage->write($localFileCopy);
     $uploaded = $this->fs->putPhotos(
       array(
