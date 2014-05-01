@@ -678,13 +678,15 @@ public function __construct($params = null)
     $baseImage->scale($this->config->photos->baseSize, $this->config->photos->baseSize);
 
     $baseImage->write($localFileCopy);
+
+/*push part 
     $uploaded = $this->fs->putPhotos(
       array(
         array($localFile => array($paths['pathOriginal'], $dateTaken)),
         array($localFileCopy => array($paths['pathBase'], $dateTaken))
       )
     );
-
+*/
 
 //above
 
@@ -693,12 +695,20 @@ public function __construct($params = null)
       if(isset($attributes['albums']))
         $this->updateAlbums($attributes['albums'], $photoId);
 
+//function generate has the push part
+//so change it as function generateNopush
       foreach($sizes as $size)
       {
         $options = $this->photo->generateFragmentReverse($size);
         $hash = $this->photo->generateHash($photoId, $options['width'], $options['height'], $options['options']);
-        $this->photo->generate($photoId, $hash, $options['width'], $options['height'], $options['options']);
-      }
+      //  $this->photo->generate($photoId, $hash, $options['width'], $options['height'], $options['options']);
+        $this->photo->generateNopush($photoId, $hash, $options['width'], $options['height'], $options['options']);
+   //breakpoint here Xin: bring the part of $customPath, $photo['dataTaken'] and $key out of Photo.php 
+    $customPath = $this->generateCustomUrl($photo['pathBase'], $width, $height, $options);
+    $key = $this->generateCustomKey($width, $height, $options);
+
+
+}
 
       $apiResp = $this->api->invoke("/{$this->apiVersion}/photo/{$photoId}/view.json", EpiRoute::httpGet, array('_GET' => array('returnSizes' => implode(',', $sizes))));
       $photo = $apiResp['result'];

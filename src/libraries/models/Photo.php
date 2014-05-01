@@ -260,6 +260,72 @@ class Photo extends BaseModel
     return false;
   }
 
+//Xin 
+public function generateNopush($id, $hash, $width, $height, $options = null)
+  {
+    if(!$this->isValidHash($hash, $id, $width, $height, $options))
+      return false;
+
+    $photo = $this->db->getPhoto($id);
+    if(!$photo)
+    {
+      $this->logger->crit(sprintf('Could not get photo from db in generate method (%s)', $id));
+      return false;
+    }
+
+    $filename = $this->fs->getPhoto($photo['pathBase']);
+    if(!$filename)
+    {
+      $this->logger->crit(sprintf('Could not get photo from fs in generate method %s', $photo['pathBase']));
+      return false;
+    }
+
+    try
+    {
+      $this->image->load($filename);
+    }
+    catch(OPInvalidImageException $e)
+    {
+      $this->logger->crit('Could not get image from image adapter in generate method', $e);
+      return false;
+    }
+
+    $maintainAspectRatio = true;
+    if(!empty($options))
+    {
+      $optionsArray = (array)explode('x', $options);
+      foreach($optionsArray as $option)
+      {
+        switch($option)
+        {
+          case 'BW':
+            $this->image->greyscale();
+            break;
+          case 'CR':
+            $maintainAspectRatio = false;
+            break;
+        }
+      }
+    }
+
+    $this->image->scale($width, $height, $maintainAspectRatio);
+    $this->image->write($filename);
+  //  $customPath = $this->generateCustomUrl($photo['pathBase'], $width, $height, $options);
+  //  $key = $this->generateCustomKey($width, $height, $options);
+   /*
+    $resFs = $this->fs->putPhoto($filename, $customPath, $photo['dateTaken']);
+    $resDb = $this->db->postPhoto($id, array($key => $customPath));
+    if($resFs && $resDb)
+      return $filename;
+  
+    return false;
+*/
+//have not returned $customPath, $photo['dataTaken'] and $key 
+    return $filename;
+ 
+  }
+
+
   /**
     * Does the opposite of $this->generateFragment.
     * Given a string fragment this will return it's parts as an array.
@@ -951,7 +1017,9 @@ class Photo extends BaseModel
     * @param string $options The options for the desired photo version.
     * @return string The path to be used for this photo.
     */
-  private function generateCustomUrl($basePath, $width, $height, $options)
+
+//Xin: to call this function, we change the property private here to public
+  public function generateCustomUrl($basePath, $width, $height, $options)
   {
     $fragment = $this->generateFragment($width, $height, $options);
     $customPath = preg_replace('#^/base/#', '/custom/', $basePath);
