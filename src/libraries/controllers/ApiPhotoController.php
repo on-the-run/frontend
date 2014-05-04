@@ -37,9 +37,11 @@ public function __construct($params = null)
     else
       $this->image = getImage();
 
-
     if(isset($params['config']))
       $this->config = $params['config'];
+
+    $this->db = getDb();
+    $this->fs = getFs();
   }
 
 
@@ -677,7 +679,7 @@ public function __construct($params = null)
 
     $baseImage->scale($this->config->photos->baseSize, $this->config->photos->baseSize);
 
-    $baseImage->write($localFileCopy);
+    $baseImage->write($localFileCopy); 
 
 /*push part 
     $uploaded = $this->fs->putPhotos(
@@ -696,16 +698,14 @@ public function __construct($params = null)
         $this->updateAlbums($attributes['albums'], $photoId);
 
 //function generate has the push part
-//so change it as function generateNopush
+//so change it as function generateNopush, return an array dataForPush including $customPath, $photo['dateTakenen'], $key and $filename
+//Question: how to use the returned data?
       foreach($sizes as $size)
       {
         $options = $this->photo->generateFragmentReverse($size);
         $hash = $this->photo->generateHash($photoId, $options['width'], $options['height'], $options['options']);
       //  $this->photo->generate($photoId, $hash, $options['width'], $options['height'], $options['options']);
-        $this->photo->generateNopush($photoId, $hash, $options['width'], $options['height'], $options['options']);
-   //breakpoint here Xin: bring the part of $customPath, $photo['dataTaken'] and $key out of Photo.php 
-    $customPath = $this->generateCustomUrl($photo['pathBase'], $width, $height, $options);
-    $key = $this->generateCustomKey($width, $height, $options);
+        $dataForPush = $this->photo->generateNopush($photoId, $hash, $options['width'], $options['height'], $options['options']);
 
 
 }
@@ -736,15 +736,31 @@ public function __construct($params = null)
       }
 
       $this->plugin->setData('photo', $photo);
-      $this->plugin->invoke('onPhotoUploaded');
+      //$this->plugin->invoke('onPhotoUploaded'); //Xin: for tracking data
 
       $this->user->setAttribute('stickyPermission', $permission);
       $this->user->setAttribute('stickyLicense', $photo['license']);
-      return $this->created("Photo {$photoId} uploaded successfully", $photo);
+      return $this->created("Photo {$photoId} resized successfully", $photo);
     }
 
-    return $this->error('File upload failure', false);
+    return $this->error('File resize failure', false);
   }
+
+/*
+Xin: write a function for pushing the photo the the fs and db
+*/
+
+ public function push()
+{
+   $resFs = $this->fs->putPhoto($filename, $customPath, $photo['dateTaken']);
+   $resDb = $this->db->postPhoto($id, array($key => $customPath));
+    if($resFs && $resDb)
+      return $filename; 
+} 
+
+
+
+
   /**
     * Update the data associated with the photo in the remote data store.
     * Parameters to be updated are in _POST

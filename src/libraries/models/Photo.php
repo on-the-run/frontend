@@ -310,9 +310,9 @@ public function generateNopush($id, $hash, $width, $height, $options = null)
 
     $this->image->scale($width, $height, $maintainAspectRatio);
     $this->image->write($filename);
-  //  $customPath = $this->generateCustomUrl($photo['pathBase'], $width, $height, $options);
-  //  $key = $this->generateCustomKey($width, $height, $options);
-   /*
+    $customPath = $this->generateCustomUrl($photo['pathBase'], $width, $height, $options);
+    $key = $this->generateCustomKey($width, $height, $options);
+   /*part of push function 
     $resFs = $this->fs->putPhoto($filename, $customPath, $photo['dateTaken']);
     $resDb = $this->db->postPhoto($id, array($key => $customPath));
     if($resFs && $resDb)
@@ -320,8 +320,10 @@ public function generateNopush($id, $hash, $width, $height, $options = null)
   
     return false;
 */
-//have not returned $customPath, $photo['dataTaken'] and $key 
-    return $filename;
+//Xin:build an array named info to return $customPath, $photo['dateTakenen'], $key and $filename
+
+    $dataForPush = array($customPath, $photo['dateTaken'],$key, $filename);
+    return $dataForPush;
  
   }
 
@@ -1018,8 +1020,7 @@ public function generateNopush($id, $hash, $width, $height, $options = null)
     * @return string The path to be used for this photo.
     */
 
-//Xin: to call this function, we change the property private here to public
-  public function generateCustomUrl($basePath, $width, $height, $options)
+  private function generateCustomUrl($basePath, $width, $height, $options)
   {
     $fragment = $this->generateFragment($width, $height, $options);
     $customPath = preg_replace('#^/base/#', '/custom/', $basePath);
